@@ -41,14 +41,16 @@ set( E57RefImpl_LIBRARIES E57RefImpl xerces-c)
 add_library( pcl_e57 src/e57_io.cpp)
 target_link_libraries(pcl_e57 ${Boost_LIBRARIES}  ${PCL_LIBRARIES} ${E57RefImpl_LIBRARIES})
 
-add_executable(pcl_e572pcd tools/pcl_e572pcd.cpp)
-target_link_libraries(pcl_e572pcd  pcl_e57 ${Boost_LIBRARIES} 
-						 ${PCL_LIBRARIES} ${E57RefImpl_LIBRARIES})
 
+add_library(pcl_io_extra src/cloud_io.cpp)
+target_link_libraries(pcl_io_extra ${Boost_LIBRARIES}  ${PCL_LIBRARIES})
 
-
-add_library(pcl_io_extra  src/las_io.cpp)
-target_link_libraries(pcl_io_extra ${Boost_LIBRARIES}  ${PCL_LIBRARIES} ${LIBLAS_LIBRARIES})
+add_library(pcl_las src/las_io.cpp)
+target_link_libraries(pcl_las ${Boost_LIBRARIES}  ${PCL_LIBRARIES} ${LIBLAS_LIBRARIES})
 
 add_executable(pcl_las2pcd tools/pcl_las2pcd.cpp)
-target_link_libraries(pcl_las2pcd pcl_io_extra ${Boost_LIBRARIES}  ${PCL_LIBRARIES} ${LIBLAS_LIBRARIES})
+target_link_libraries(pcl_las2pcd pcl_las ${Boost_LIBRARIES}  ${PCL_LIBRARIES} ${LIBLAS_LIBRARIES})
+
+
+add_executable(cvt2pcd tools/cvt2pcd.cpp)
+target_link_libraries(cvt2pcd pcl_las pcl_e57 pcl_io_extra ${Boost_LIBRARIES}  ${PCL_LIBRARIES} ${LIBLAS_LIBRARIES})

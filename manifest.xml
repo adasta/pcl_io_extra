@@ -1,0 +1,24 @@
+<package>
+  <description brief="pcl_io_extra">
+
+     pcl_io_extra
+
+  </description>
+  <author>Adam Stambler</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/pcl_wall_modeling</url>
+
+  <!-- PCL -->
+  <rosdep name="pcl" />
+  
+    <!-- depend package="pcl" / -->
+  <export>
+    <cpp cflags="-I${prefix}/include " 
+    lflags="-Wl,-rpath,${prefix}/lib -L${prefix}/lib -lpcl_io_extra"/>
+  </export>
+
+
+</package>
+
+
