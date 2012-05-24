@@ -1,16 +1,41 @@
+pcl_io_extra
+By Adam Stambler of Carnegie Mellon University
 
-This software requirs libLas.  You can get liblas from :
-http://liblas.org/index.html
+This is a package of additional io modules for PCL. 
+It is meant to make it easier to just take a random point cloud file
+and read it into your PCL program.  
+
+Reader Support
+PTX
+E57
+LAS
+
+Write Support:
+
+
+
+
+--------------Library Requrements-------------------
+
+Xerces
+Both E57 and LAS use Xerces.  You want Xerces 3.0 or greater.
+
+sudo apt-get install libxerces-c-dev
+
+
+
+LAS Support requires liblas.  
+You can get liblas from : http://liblas.org/index.html
 
 git clone git://github.com/libLAS/libLAS.git liblas
 
-
-The debian install on 11.10 is too old.  It depends on Xerces 2.8 
-
-sudo apt-get install  liblas-dev
+Do not use the debian install for Ubuntu 
+The debian install on 11.10 is too old.  
 
 
-libe57
-http://www.libe57.org/
+E57 
+E57 support depends on libe57 ( http://www.libe57.org/)
 
- svn co https://e57-3d-imgfmt.svn.sourceforge.net/svnroot/e57-3d-imgfmt/trunk e57repimpl
+You need to compile your own E57:
+
+svn co https://e57-3d-imgfmt.svn.sourceforge.net/svnroot/e57-3d-imgfmt/trunk e57refimpl
