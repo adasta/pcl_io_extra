@@ -7,12 +7,11 @@
   <author>Adam Stambler</author>
   <license>BSD</license>
   <review status="unreviewed" notes=""/>
-  <url>http://ros.org/wiki/pcl_wall_modeling</url>
+  <url>http://github.com/adasta/pcl_io_extra</url>
 
   <!-- PCL -->
   <rosdep name="pcl" />
   
-    <!-- depend package="pcl" / -->
   <export>
     <cpp cflags="-I${prefix}/include " 
     lflags="-Wl,-rpath,${prefix}/lib -L${prefix}/lib -lpcl_io_extra"/>
