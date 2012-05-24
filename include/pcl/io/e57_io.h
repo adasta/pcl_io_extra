@@ -20,12 +20,17 @@ namespace pcl{
    * WARNING - PCL only supports floating point numbers for transformations and point clouds.
    * IT WILL LOOSE PRECISION when you have a point cloud over a large distance will very high precision.
    * There are not enough significant digits in 32bit floats to handle the data.
+   *
+   *
+   * TODO View Point needs to be transfered. How do you maintain range image?  How do you read row/column?
    */
 
-  class E57Reader : FileReader {
+  class E57Reader : public FileReader {
 
   public:
     E57Reader();
+    E57Reader(Eigen::Vector4d offset): read_buffer_size_(100), scan_number_(0), pt_offset_(offset){};
+
     virtual ~E57Reader();
     /* Load only the meta information (number of points, their types, etc),
             * and not the points themselves, from a given FILE file. Useful for fast
@@ -70,10 +75,14 @@ namespace pcl{
                 Eigen::Vector4f &origin, Eigen::Quaternionf &orientation, int &file_version,
                 const int offset = 0);
 
+          void setPointOffset(Eigen::Vector4d offset){pt_offset_ =offset;}
+
   private:
        //when reading from a multiscan file, return scan_number scan
        int scan_number_;
        int read_buffer_size_;
+       Eigen::Vector4d pt_offset_;
+
   };
 
   class E57Writer : FileWriter {

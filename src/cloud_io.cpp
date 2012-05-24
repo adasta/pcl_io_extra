@@ -13,9 +13,6 @@
 
 namespace pcl
 {
-  namespace io
-  {
-
     CloudReader::CloudReader ()
     {
       // TODO Auto-generated constructor stub
@@ -80,6 +77,4 @@ namespace pcl
          }
          return reader_map_[ext];
       }
-
-  } /* namespace io */
 } /* namespace pcl */

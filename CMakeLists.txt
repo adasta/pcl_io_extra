@@ -23,34 +23,44 @@ FIND_PACKAGE( Boost 1.40 COMPONENTS
 INCLUDE_DIRECTORIES( ${Boost_INCLUDE_DIR} )
 include_directories( include)
 
-FIND_PACKAGE(LIBLAS)
-include_directories(${LIBLAS_INCLUDE_DIRS})
 
-#FIX E57Cmake !!!
-#FIND_PACKAGE(E57RefImpl)
-find_package(Xerces)
-set( E57RefImpl_INCLUDE_DIRS /usr/local/e57/include ${Xerces_INCLUDE_DIRS})
-include_directories(${E57RefImpl_INCLUDE_DIRS})
-set( E57RefImpl_LIBRARY_DIRS /usr/local/e57/lib ${Xerces_LIBRARY_DIRS})
-
-link_directories(${E57RefImpl_LIBRARY_DIRS})
-
-set( E57RefImpl_LIBRARIES E57RefImpl xerces-c)
-
-
-add_library( pcl_e57 src/e57_io.cpp)
-target_link_libraries(pcl_e57 ${Boost_LIBRARIES}  ${PCL_LIBRARIES} ${E57RefImpl_LIBRARIES})
-
-
-add_library(pcl_io_extra src/cloud_io.cpp)
+add_library(pcl_io_extra src/cloud_io.cpp src/ptx_io.cpp)
 target_link_libraries(pcl_io_extra ${Boost_LIBRARIES}  ${PCL_LIBRARIES})
 
-add_library(pcl_las src/las_io.cpp)
-target_link_libraries(pcl_las ${Boost_LIBRARIES}  ${PCL_LIBRARIES} ${LIBLAS_LIBRARIES})
 
-add_executable(pcl_las2pcd tools/pcl_las2pcd.cpp)
-target_link_libraries(pcl_las2pcd pcl_las ${Boost_LIBRARIES}  ${PCL_LIBRARIES} ${LIBLAS_LIBRARIES})
+#FIX E57Cmake !!!
+FIND_PACKAGE(E57RefImpl)
 
+if (E57RefImpl_FOUND)
+	message("Adding E57 Support\n")
+	find_package(Xerces)
+	set( E57RefImpl_INCLUDE_DIRS /usr/local/e57/include ${Xerces_INCLUDE_DIRS})
+	include_directories(${E57RefImpl_INCLUDE_DIRS})
+	set( E57RefImpl_LIBRARY_DIRS "/usr/local/e57/lib"  ${Xerces_LIBRARY_DIRS})
+	link_directories(${E57RefImpl_LIBRARY_DIRS} )
+	set( E57RefImpl_LIBRARIES E57RefImpl xerces-c)
+	message("/usr/local/e57/lib")
+	add_library( pcl_e57 src/e57_io.cpp)
+	target_link_libraries(pcl_e57 ${Boost_LIBRARIES}  ${PCL_LIBRARIES} ${E57RefImpl_LIBRARIES})
+	add_definitions(-DE57)
+endif()
+
+
+FIND_PACKAGE(LIBLAS)
+if (LIBLAS_FOUND)
+	add_library(pcl_las src/las_io.cpp)
+	target_link_libraries(pcl_las ${Boost_LIBRARIES}  ${PCL_LIBRARIES} ${LIBLAS_LIBRARIES})
+	include_directories(${LIBLAS_INCLUDE_DIRS})
+	add_definitions(-DLIBLAS)
+endif()
 
 add_executable(cvt2pcd tools/cvt2pcd.cpp)
-target_link_libraries(cvt2pcd pcl_las pcl_e57 pcl_io_extra ${Boost_LIBRARIES}  ${PCL_LIBRARIES} ${LIBLAS_LIBRARIES})
+target_link_libraries(cvt2pcd pcl_io_extra ${Boost_LIBRARIES}  ${PCL_LIBRARIES})
+
+if (E57RefImpl_FOUND)
+target_link_libraries(cvt2pcd pcl_e57)
+endif()
+
+if (LIBLAS_FOUND)
+target_link_libraries(cvt2pcd pcl_las ${LIBLAS_LIBRARIES})
+endif()

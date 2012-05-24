@@ -14,7 +14,7 @@ using namespace std;
 class FieldReaderBase{
   public:
   virtual ~FieldReaderBase(){};
-  virtual void copy(uint64_t data_offset, int copy_n) =0;
+  virtual void copy( int buffer_idx, int cloud_idx) =0;
 
   void setup( uint8_t* output, int point_size){
     odata_ = output;
@@ -29,16 +29,15 @@ template<class PCLT, class BUFFERT>
 class FieldReader : public FieldReaderBase {
 public:
   FieldReader(){
+    offset =0;
   }
   FieldReader(const sensor_msgs::PointField& field, BUFFERT* buffer){
     field_ = field;
     buffer_ = buffer;
   }
  virtual  ~FieldReader(){}
-  virtual void copy(uint64_t data_offset, int copy_n){
-    for(uint64_t i=0; i< copy_n; i++){
-      *( (PCLT *) ( odata_ +point_size_*i +field_.offset  +data_offset  ) )  =  buffer_[i];
-    }
+  virtual void copy(int buffer_idx, int cloud_idx){
+      *( (PCLT *) ( odata_ +point_size_*cloud_idx +field_.offset   ) )  =  buffer_[buffer_idx];
   }
 
   void setup( uint8_t* output, int point_size){
@@ -49,6 +48,7 @@ public:
 private:
   BUFFERT* buffer_;
   sensor_msgs::PointField field_;
+  double offset;
 };
 
 
@@ -62,12 +62,10 @@ public:
     field_ = field;
   }
 
-  virtual void copy(uint64_t data_offset, int copy_n){
-    for(int i=0; i< copy_n; i++){
+  virtual void copy( int buffer_idx, int cloud_idx){
       // pack r/g/b into rgb
-      uint32_t rgb = ((uint32_t)r_[i] << 16 | (uint32_t)g_[i] << 8 | (uint32_t)b_[i]);
-      *( (float *) ( odata_ +point_size_*i +field_.offset + data_offset   ) )  =  *reinterpret_cast<float*>(&rgb);
-    }
+      uint32_t rgb = ((uint32_t)r_[buffer_idx] << 16 | (uint32_t)g_[buffer_idx] << 8 | (uint32_t)b_[buffer_idx]);
+      *( (float *) ( odata_ +point_size_*cloud_idx +field_.offset   ) )  =  *reinterpret_cast<float*>(&rgb);
   }
 
 protected:
@@ -78,13 +76,63 @@ protected:
 };
 
 
+
+void readE57Header(StructureNode& scan,
+                sensor_msgs::PointCloud2& cloud,
+                Eigen::Vector4d& origin,
+                Eigen::Quaterniond& rot){
+
+  if(scan.isDefined("indexBounds")) {
+   StructureNode indexBounds(scan.get("indexBounds"));
+   if(indexBounds.isDefined("columnMaximum"))
+       cloud.width = IntegerNode(indexBounds.get("columnMaximum")).value() -
+                        IntegerNode(indexBounds.get("columnMinimum")).value() + 1;
+
+       if(indexBounds.isDefined("rowMaximum"))
+       cloud.height = IntegerNode(indexBounds.get("rowMaximum")).value() -
+                 IntegerNode(indexBounds.get("rowMinimum")).value() + 1;
+       cloud.is_dense=true;
+     }
+    else{
+      CompressedVectorNode points(scan.get("points"));
+      cloud.width = points.childCount();
+      cloud.height =1;
+    }
+
+
+  // Get pose structure for scan.
+
+    if(scan.isDefined("pose"))
+    {
+    StructureNode pose(scan.get("pose"));
+    if(pose.isDefined("rotation"))
+    {
+            StructureNode rotation(pose.get("rotation"));
+            rot = Eigen::Quaterniond(  FloatNode(rotation.get("w")).value(),
+                                       FloatNode(rotation.get("x")).value(),
+                                       FloatNode(rotation.get("y")).value(),
+                                       FloatNode(rotation.get("z")).value());
+    }
+    if(pose.isDefined("translation"))
+    {
+      StructureNode translation(pose.get("translation"));
+      origin[0]= FloatNode(translation.get("x")).value();
+      origin[1] = FloatNode(translation.get("y")).value();
+      origin[2] = FloatNode(translation.get("z")).value();
+      origin[3] = 1;
+    }
+    }
+
+}
+
+
 /*
  * The majority of this code is adapted from the E57 reader example.
  */
 
 pcl::E57Reader::E57Reader() : read_buffer_size_(100), scan_number_(0)
 {
-
+  pt_offset_ = Eigen::Vector4d::Zero();
 }
 
 
@@ -108,16 +156,26 @@ int pcl::E57Reader::readHeader(const std::string & file_name, sensor_msgs::Point
          /// Make sure vector of scans is defined and of expected type.
          /// If "/data3D" wasn't defined, the call to root.get below would raise an exception.
          if (!root.isDefined("/data3D")) {
-             cout << "File doesn't contain 3D images" << endl;
+             cerr << "File doesn't contain 3D images" << endl;
              return 0;
          }
          Node n = root.get("/data3D");
          if (n.type() != E57_VECTOR) {
-             cout << "bad file" << endl;
+             cerr << "bad file" << endl;
              return 0;
          }
+         /// The node is a vector so we can safely get a VectorNode handle to it.
+         /// If n was not a VectorNode, this would raise an exception.
+         VectorNode data3D(n);
 
-         //TODO Implement header reading
+         StructureNode scan(data3D.get(scan_number_));
+
+         Eigen::Vector4d origind;
+         Eigen::Quaterniond quatd;
+         readE57Header(scan,cloud,origind, quatd);
+         origind += -pt_offset_;
+         origin = origind.cast<float>();
+         orientation = quatd.cast<float>();
 
          imf.close();
      } catch(E57Exception& ex) {
@@ -130,6 +188,7 @@ int pcl::E57Reader::readHeader(const std::string & file_name, sensor_msgs::Point
          cerr << "Got an unknown exception" << endl;
          return -1;
      }
+     return 1;
 }
 
 
@@ -157,7 +216,8 @@ int pcl::E57Reader::read(const std::string & file_name, sensor_msgs::PointCloud2
   e57::uint8_t* color_r = NULL, *color_g = NULL, *color_b=NULL;
   float* intensity = NULL;
   std::vector<FieldReaderBase *> fieldreaders;
-
+  uint32_t indexRow[read_buffer_size_];
+  uint32_t indexColumn[read_buffer_size_];
 
   try {
      /// Read file from disk
@@ -167,12 +227,12 @@ int pcl::E57Reader::read(const std::string & file_name, sensor_msgs::PointCloud2
      /// Make sure vector of scans is defined and of expected type.
      /// If "/data3D" wasn't defined, the call to root.get below would raise an exception.
      if (!root.isDefined("/data3D")) {
-         cout << "File doesn't contain 3D images" << endl;
+       pcl::console::print_error("[E57Reader] File doesn't contain 3D images\n");
          return 0;
      }
      Node n = root.get("/data3D");
      if (n.type() != E57_VECTOR) {
-         cout << "bad file" << endl;
+       pcl::console::print_error("[E57Reader] bad file");
          return 0;
      }
 
@@ -180,21 +240,19 @@ int pcl::E57Reader::read(const std::string & file_name, sensor_msgs::PointCloud2
      /// If n was not a VectorNode, this would raise an exception.
      VectorNode data3D(n);
 
-     /// Print number of children of data3D.  This is the number of scans in file.
-     int64_t scanCount = data3D.childCount();
-     cout << "Number of scans in file:" << scanCount << endl;
-
      /// Get the selected scan.
      StructureNode scan(data3D.get(scan_number_));
-     cout << "got:" << scan.pathName() << endl;
 
      /// Get "points" field in scan.  Should be a CompressedVectorNode.
      CompressedVectorNode points(scan.get("points"));
-     cout << "got:" << points.pathName() << endl;
 
-     total_points =  points.childCount();
-     cloud.width = total_points;
-     cloud.height =1;
+     Eigen::Vector4d origind;
+     Eigen::Quaterniond quatd;
+     readE57Header(scan,cloud,origind, quatd);
+     origind += -pt_offset_;
+     origin = origind.cast<float>();
+     orientation = quatd.cast<float>();
+
      /// Need to figure out if has Cartesian or spherical coordinate system.
      /// Interrogate the CompressedVector's prototype of its records.
      StructureNode proto(points.prototype());
@@ -203,7 +261,7 @@ int pcl::E57Reader::read(const std::string & file_name, sensor_msgs::PointCloud2
      if ( !(proto.isDefined("cartesianX") &&
          proto.isDefined("cartesianY") &&
          proto.isDefined("cartesianZ") )) {
-       std::cout << "File has no XYZ data\n  The data may be in spherical coordiantes.\n";
+       pcl::console::print_error("[E57Reader]  File has no XYZ data\n  The data may be in spherical coordiantes.\n");
        return -1;  //there is no XYZ data
      }
 
@@ -250,19 +308,31 @@ int pcl::E57Reader::read(const std::string & file_name, sensor_msgs::PointCloud2
        int field_size[] = {1,1,2,2,4,4,4,8};
        for(int i=0; i< cloud.fields.size(); i++) point_size += cloud.fields[i].count* field_size[cloud.fields[i].datatype-1];
 
+       total_points = cloud.width*cloud.height;
        cloud.data.resize( total_points*point_size );
+       cloud.point_step = point_size;
 
        for(int i=0; i<fieldreaders.size(); i++) fieldreaders[i]->setup(cloud.data.data(), point_size);
+
+       if (cloud.height > 1){
+         destBuffers.push_back(SourceDestBuffer(imf, "rowIndex", indexRow, read_buffer_size_, true,true));
+         destBuffers.push_back(SourceDestBuffer(imf, "columnIndex", indexColumn, read_buffer_size_, true,true));
+       }
 
         /// Create a reader of the points CompressedVector, try to read first block of N points
         /// Each call to reader.read() will fill the xyz buffers until the points are exhausted.
         CompressedVectorReader reader = points.reader(destBuffers);
-        int read_count =0;
-        uint64_t read_offset=0;
+        int read_count =-1;
         read_count = reader.read();
+        int cloud_index=0;
         while ( read_count > 0 ){
-          for(int i=0; i<fieldreaders.size(); i++) fieldreaders[i]->copy(read_offset, read_count);
-          read_offset = point_size*read_count+read_offset;
+          for(int j=0; j<read_count; j++){
+            if (cloud.height>1) cloud_index = (cloud.height-indexRow[j]-1) * cloud.width + indexColumn[j];
+            else cloud_index ++;
+            for(int i=0; i<fieldreaders.size(); i++){
+              fieldreaders[i]->copy(j, cloud_index);
+            }
+          }
           read_count = reader.read();
         }
         imf.close();

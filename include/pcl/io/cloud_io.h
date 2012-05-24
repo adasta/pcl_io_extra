@@ -15,8 +15,6 @@
 
 namespace pcl
 {
-  namespace io
-  {
 
     class CloudReader : public FileReader
     {
@@ -107,6 +105,5 @@ namespace pcl
       FileReader* chooseReader(std::string file_name);
     };
 
-  } /* namespace io */
 } /* namespace pcl */
 #endif /* CLOUDREADER_H_ */
