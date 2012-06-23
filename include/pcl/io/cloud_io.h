@@ -9,6 +9,7 @@
 #define CLOUDREADER_H_
 
 #include <pcl/io/file_io.h>
+#include <pcl/io/filereaderd.h>
 
 #include <map>
 #include <string>
@@ -30,6 +31,9 @@ namespace pcl
        * CloudReader handles deletion of file reader pointers
        */
       bool registerExtension(std::string ext, FileReader* reader);
+
+      FileReader* getReader(std::string ext){return reader_map_[ext];};
+
 
       void getSupportedExtensions(std::vector<std::string> extensions);
 
@@ -90,7 +94,7 @@ namespace pcl
 
  template<typename PointT> inline int
       read (const std::string &file_name, pcl::PointCloud<PointT> &cloud, const int offset  =0){
-   FileReader::read(file_name, cloud, offset);
+   return FileReader::read(file_name, cloud, offset);
  }
       
       

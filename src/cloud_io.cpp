@@ -10,6 +10,9 @@
 #include <pcl/io/pcd_io.h>
 #include <pcl/io/ptx_io.h>
 
+#include <algorithm>
+
+
 
 namespace pcl
 {
@@ -66,13 +69,18 @@ namespace pcl
         //figure out the extension
          size_t pos = file_name.rfind('.');
          if (pos == std::string::npos) {
-           pcl::console::print_error("[CloudReader] Input file %s does not have extension.", file_name.c_str());
+           pcl::console::print_error("[CloudReader] Input file %s does not have extension.\n", file_name.c_str());
            return NULL;
          }
          std::string ext = file_name.substr(pos+1,file_name.size()-pos);
+         size_t p2 = ext.find_last_not_of( " \t\n\r" );
+         if( std::string::npos != p2 )
+           ext.erase( p2+1 );
+         else
+           ext.clear();
 
          if (reader_map_.count(ext) ==0 ) {
-           pcl::console::print_error("[CloudReader] %s extension not supported.", ext.c_str());
+           pcl::console::print_error("[CloudReader] %s extension not supported.\n", ext.c_str());
            return NULL;
          }
          return reader_map_[ext];
