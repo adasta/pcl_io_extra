@@ -7,9 +7,9 @@
 #include <fstream>  // std::ifstream
 #include <iostream> // std::cout
 
-
 pcl::LASReader::LASReader()
 {
+
 }
 
 pcl::LASReader::~LASReader()
@@ -28,9 +28,9 @@ int pcl::LASReader::readHeader(const std::string & file_name, sensor_msgs::Point
   liblas::Header const& header = reader.GetHeader();
 
   //todo
-
-
 }
+
+
 
 /*
  *
@@ -60,6 +60,7 @@ int pcl::LASReader::read(const std::string & file_name,
   ifs.open(file_name.c_str(), std::ios::in | std::ios::binary);
 
   liblas::Reader reader(ifs);
+
 
   unsigned int idx = 0;
 
@@ -102,10 +103,13 @@ int pcl::LASReader::read(const std::string & file_name,
   cloud.fields.push_back(f);
   }
 
-  const int point_size = 32;
+  std::cout << "LAS extents : " << reader.GetHeader().GetExtent() .minx()  << "  "  << reader.GetHeader().GetExtent() .maxx() << " \n";
+
+  const int point_size = 16;
   cloud.data.resize( reader.GetHeader().GetPointRecordsCount() * point_size);
   cloud.height =1;
   cloud.width = reader.GetHeader().GetPointRecordsCount();
+  cloud.point_step =point_size;
 
   reader.ReadNextPoint();
   liblas::Point const& pz = reader.GetPoint();
@@ -134,6 +138,7 @@ int pcl::LASReader::read(const std::string & file_name,
        *( (float *) ( cloud.data.data() + point_size*i +8          ) )  =p.GetZ()- dorigin[2];
        *( (float *) ( cloud.data.data() + point_size*i +12) )  =p.GetIntensity();
   }
+  return cloud.width*cloud.height;
 }
 
 pcl::LASWriter::LASWriter()

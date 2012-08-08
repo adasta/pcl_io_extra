@@ -84,7 +84,7 @@ int main(int argc, char** argv){
   reader.registerExtension("e57", new pcl::E57Reader(voffset));
 #endif
 #ifdef LAS
-  reader.registerExtension("las", new pcl::io::LI(voffset));
+  reader.registerExtension("las", new pcl::LASReader );
 #endif
   sensor_msgs::PointCloud2 cloud;
 

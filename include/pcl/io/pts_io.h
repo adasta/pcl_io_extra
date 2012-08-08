@@ -1,23 +1,23 @@
 /*
- * las_io.h
+ * pts_io.h
  *
- *  Created on: May 9, 2012
- *      Author: asher
+ *  Created on: Aug 5, 2012
+ *      Author: Adam Stambler
  */
 
-#ifndef LAS_IO_H_
-#define LAS_IO_H_
+#ifndef PTS_IO_H_
+#define PTS_IO_H_
+
 
 #include <pcl/io/file_io.h>
 
-
 namespace pcl{
 
-  class LASReader : public FileReader {
+  class PTSReader : public FileReader {
 
   public:
-    LASReader();
-    virtual ~LASReader();
+    PTSReader();
+    virtual ~PTSReader();
     /* Load only the meta information (number of points, their types, etc),
             * and not the points themselves, from a given FILE file. Useful for fast
             * evaluation of the underlying data structure.
@@ -58,34 +58,11 @@ namespace pcl{
             */
           virtual int
           read (const std::string &file_name, sensor_msgs::PointCloud2 &cloud,
-                Eigen::Vector4f &origin, Eigen::Quaternionf &orientation, int &file_version ,
+                Eigen::Vector4f &origin, Eigen::Quaternionf &orientation, int &file_version,
                 const int offset = 0);
 
 
   };
 
-  class LASWriter : FileWriter {
-
-  public:
-    LASWriter();
-    virtual ~LASWriter();
-
-    /** \brief Save point cloud data to a FILE file containing n-D points
-           * \param[in] file_name the output file name
-           * \param[in] cloud the point cloud data message
-           * \param[in] origin the sensor acquisition origin
-           * \param[in] orientation the sensor acquisition orientation
-           * \param[in] binary set to true if the file is to be written in a binary
-           * FILE format, false (default) for ASCII
-           */
-         virtual int
-         write (const std::string &file_name, const sensor_msgs::PointCloud2 &cloud,
-                const Eigen::Vector4f &origin = Eigen::Vector4f::Zero (),
-                const Eigen::Quaternionf &orientation = Eigen::Quaternionf::Identity (),
-                const bool binary = false);
-
-  };
-
 }
-
-#endif /* LAS_IO_H_ */
+#endif /* PTS_IO_H_ */

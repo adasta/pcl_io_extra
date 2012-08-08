@@ -24,7 +24,10 @@ INCLUDE_DIRECTORIES( ${Boost_INCLUDE_DIR} )
 include_directories( include)
 
 
-add_library(pcl_io_extra src/cloud_io.cpp src/ptx_io.cpp)
+add_library(pcl_io_extra src/cloud_io.cpp 
+						 src/ptx_io.cpp 
+						 src/pts_io.cpp
+						 src/cloud_collection.cpp)
 target_link_libraries(pcl_io_extra ${Boost_LIBRARIES}  ${PCL_LIBRARIES})
 
 
@@ -46,7 +49,7 @@ if (LIBLAS_FOUND)
 	add_library(pcl_las src/las_io.cpp)
 	target_link_libraries(pcl_las ${Boost_LIBRARIES}  ${PCL_LIBRARIES} ${LIBLAS_LIBRARIES})
 	include_directories(${LIBLAS_INCLUDE_DIRS})
-	add_definitions(-DLIBLAS)
+	add_definitions(-DLAS)
 endif()
 
 add_executable(cvt2pcd tools/cvt2pcd.cpp)

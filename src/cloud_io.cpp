@@ -9,7 +9,7 @@
 
 #include <pcl/io/pcd_io.h>
 #include <pcl/io/ptx_io.h>
-
+#include <pcl/io/pts_io.h>
 #include <algorithm>
 
 
@@ -22,6 +22,7 @@ namespace pcl
 
       reader_map_["pcd"] = new pcl::PCDReader;
       reader_map_["ptx"] = new pcl::PTXReader;
+      reader_map_["pts"] = new pcl::PTSReader;
 
     }
 
