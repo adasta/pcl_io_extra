@@ -178,7 +178,7 @@ int pcl::PTXReader::read(const std::string & file_name, sensor_msgs::PointCloud2
        *( ( data +1 ) )  =y;
        *( ( data +2 ) )  =z;
        *( ( data +3) )  =intensity;
-       uint32_t rgb = ((uint32_t)r << 16 | (uint32_t)b<< 8 | (uint32_t)b);
+       uint32_t rgb = ((uint32_t)r << 16 | (uint32_t)g<< 8 | (uint32_t)b);
        *( ( data+ 4) )  =  *reinterpret_cast<float*>(&rgb);
     }
   }

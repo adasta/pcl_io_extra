@@ -143,7 +143,7 @@ int pcl::PTSReader::read(const std::string & file_name, sensor_msgs::PointCloud2
        *( ( data    ) )  = x;
        *( ( data +1 ) )  =y;
        *( ( data +2 ) )  =z;
-       uint32_t rgb = ((uint32_t)r << 16 | (uint32_t)b<< 8 | (uint32_t)b);
+       uint32_t rgb = ((uint32_t)r << 16 | (uint32_t)g<< 8 | (uint32_t)b);
        *( ( data+ 3) )  =  *reinterpret_cast<float*>(&rgb);
        ptoffset+= cloud.point_step;
     }
