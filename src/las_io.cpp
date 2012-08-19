@@ -71,7 +71,7 @@ int pcl::LASReader::read(const std::string & file_name,
 
   {
     sensor_msgs::PointField f;
-  f.datatype = sensor_msgs::PointField::FLOAT32;
+  f.datatype = sensor_msgs::PointField::FLOAT64;
   f.count= 1;
   f.name="x";
   cloud.fields.push_back(f);
@@ -79,18 +79,18 @@ int pcl::LASReader::read(const std::string & file_name,
 
   {
   sensor_msgs::PointField f;
-  f.datatype = sensor_msgs::PointField::FLOAT32;
+  f.datatype = sensor_msgs::PointField::FLOAT64;
   f.count= 1;
   f.name="y";
-  f.offset =4;
+  f.offset =8;
   cloud.fields.push_back(f);
   }
   {
   sensor_msgs::PointField f;
-  f.datatype = sensor_msgs::PointField::FLOAT32;
+  f.datatype = sensor_msgs::PointField::FLOAT64;
   f.count= 1;
   f.name="z";
-  f.offset =8;
+  f.offset =16;
   cloud.fields.push_back(f);
   }
 
@@ -99,44 +99,23 @@ int pcl::LASReader::read(const std::string & file_name,
   f.datatype = sensor_msgs::PointField::FLOAT32;
   f.count= 1;
   f.name="intensity";
-  f.offset =12;
+  f.offset =24;
   cloud.fields.push_back(f);
   }
 
-  std::cout << "LAS extents : " << reader.GetHeader().GetExtent() .minx()  << "  "  << reader.GetHeader().GetExtent() .maxx() << " \n";
-
-  const int point_size = 16;
+  const int point_size = 28;
   cloud.data.resize( reader.GetHeader().GetPointRecordsCount() * point_size);
   cloud.height =1;
   cloud.width = reader.GetHeader().GetPointRecordsCount();
   cloud.point_step =point_size;
 
-  reader.ReadNextPoint();
-  liblas::Point const& pz = reader.GetPoint();
-  origin[0] = pz.GetX();
-  origin[1] = pz.GetY();
-  origin[2] = pz.GetZ();
-
-  Eigen::Vector3d dorigin;
-    dorigin[0] = pz.GetX();
-   dorigin[1] = pz.GetY();
-   dorigin[2] = pz.GetZ();
-  {
-    int i=0;
-    *( (float *) ( cloud.data.data() +point_size*i     ) )  =  0;
-    *( (float *) ( cloud.data.data() + point_size*i +4 ) )  =0;
-    *( (float *) ( cloud.data.data() + point_size*i +8          ) )  =0;
-    *( (float *) ( cloud.data.data() + point_size*i +12) )  =pz.GetIntensity();
-  }
-
-
-  for(int i=1; reader.ReadNextPoint(); i++)
+  for(uint64_t i=0; reader.ReadNextPoint(); i++)
   {
       liblas::Point const& p = reader.GetPoint();
-       *( (float *) ( cloud.data.data() +point_size*i     ) )  =  p.GetX()-dorigin[0];
-       *( (float *) ( cloud.data.data() + point_size*i +4 ) )  =p.GetY() - dorigin[1];
-       *( (float *) ( cloud.data.data() + point_size*i +8          ) )  =p.GetZ()- dorigin[2];
-       *( (float *) ( cloud.data.data() + point_size*i +12) )  =p.GetIntensity();
+       *( (double *) ( cloud.data.data() +point_size*i     ) )=  p.GetX();
+       *( (double *) ( cloud.data.data() + point_size*i +8 ) )=  p.GetY();
+       *( (double *) ( cloud.data.data() + point_size*i +16 ) )=  p.GetZ();
+       *( (float *) ( cloud.data.data() + point_size*i +24) ) = p.GetIntensity();
   }
   return cloud.width*cloud.height;
 }

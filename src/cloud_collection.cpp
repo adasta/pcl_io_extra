@@ -12,7 +12,7 @@
 #include <sensor_msgs/PointCloud2.h>
 #include <pcl/point_types.h>
 
-#include <pcl/intensity_point_type.h>
+#include <pcl/extra_point_type.h>
 
 
 namespace pcl

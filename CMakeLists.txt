@@ -27,7 +27,10 @@ include_directories( include)
 add_library(pcl_io_extra src/cloud_io.cpp 
 						 src/ptx_io.cpp 
 						 src/pts_io.cpp
-						 src/cloud_collection.cpp)
+						 src/xyz_io.cpp
+						 src/vtx_io.cpp
+						 src/cloud_collection.cpp
+						 )
 target_link_libraries(pcl_io_extra ${Boost_LIBRARIES}  ${PCL_LIBRARIES})
 
 

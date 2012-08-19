@@ -10,9 +10,12 @@
 #include <pcl/io/cloud_io.h>
 #include <pcl/io/ptx_io.h>
 #include <pcl/point_types.h>
+#include <pcl/common/transforms.h>
 
 #include <boost/program_options.hpp>
 #include <boost/filesystem.hpp>
+
+#include <pcl/double_utils.h>
 
 namespace po=boost::program_options;
 
@@ -35,7 +38,7 @@ int main(int argc, char** argv){
           ("help", "produce help message")
           ("input,i",po::value<std::string>()->required(), "input point cloud ")
           ("output,o",po::value<std::string>(), "output pcd ")
-          ("view_offset,v", po::value< std::vector<double> >()->multitoken(), "Offset a view point translation (HACK for dealing with floating point precision)")
+          ("view_offset,v", po::value< std::string>(), "Offset view offset to translate and convert a float64 to float32 XYZ")
           ("ascii,a", "PCD should be in asci format.  (Default binary compressed)")
           ;
 
@@ -61,13 +64,6 @@ int main(int argc, char** argv){
      return 1;
  }
 
-
-  Eigen::Vector4d voffset;
-  if (vm.count("view_offset")) {
-    std::vector<double> o =vm["view_offset"].as<std::vector<double> >();
-    for(int i=0; i<3; i++) voffset[i] = o[i];
-    voffset[3] = 1;
-  }
   pcl::CloudReader reader;
 
   std::string ifile, ofile;
@@ -81,20 +77,37 @@ int main(int argc, char** argv){
   }
 
 #ifdef E57
-  reader.registerExtension("e57", new pcl::E57Reader(voffset));
+  reader.registerExtension("e57", new pcl::E57Reader( ));
 #endif
 #ifdef LAS
   reader.registerExtension("las", new pcl::LASReader );
 #endif
-  sensor_msgs::PointCloud2 cloud;
+  sensor_msgs::PointCloud2::Ptr cloud(new sensor_msgs::PointCloud2);
 
   Eigen::Vector4f origin;
   Eigen::Quaternionf rot;
 
   int fv;
   std::clog << "Loading " <<  ifile << " \n";
-  int c = reader.read(ifile,cloud, origin, rot, fv);
+  int c = reader.read(ifile,*cloud, origin, rot, fv);
   std::clog << "There were " << c << " points \n";
+
+  if (pcl::hasDoublePointXYZ(*cloud) ){
+    if (vm.count("view_offset")){
+      Eigen::Vector3d voff;
+
+      if ( 3 == sscanf(vm["view_offset"].as<std::string>().c_str(), "%lf,%lf,%lf", &voff[0], &voff[1], &voff[2]) ){
+        std::cout << "Translating by " << voff.transpose() << " \n";
+        sensor_msgs::PointCloud2::Ptr cloud2(new sensor_msgs::PointCloud2);
+        pcl::cvtToDoubleAndOffset(*cloud,*cloud2,voff);
+        cloud = cloud2;
+      }
+      else{
+        std::cout << "Invalid view offset of : " << vm["view_offset"].as<std::string>() << " \n";
+      }
+    }
+  }
+
 
   pcl::PCDWriter writer;
   writer.write(ofile, cloud,origin, rot, !vm.count("ascii"));
