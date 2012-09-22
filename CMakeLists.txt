@@ -18,7 +18,7 @@ add_definitions(${PCL_DEFINITIONS})
 
 FIND_PACKAGE( Boost 1.40 COMPONENTS 
 					program_options filesystem thread
-					serialization python 
+					serialization python  system
 					REQUIRED )
 INCLUDE_DIRECTORIES( ${Boost_INCLUDE_DIR} )
 include_directories( include)
@@ -29,9 +29,13 @@ add_library(pcl_io_extra src/cloud_io.cpp
 						 src/pts_io.cpp
 						 src/xyz_io.cpp
 						 src/vtx_io.cpp
+						 src/xya_io.cpp
 						 src/cloud_collection.cpp
+						 src/double_utils.cpp
 						 )
 target_link_libraries(pcl_io_extra ${Boost_LIBRARIES}  ${PCL_LIBRARIES})
+
+
 
 
 #FIX E57Cmake !!!
@@ -60,8 +64,25 @@ target_link_libraries(cvt2pcd pcl_io_extra ${Boost_LIBRARIES}  ${PCL_LIBRARIES})
 
 if (E57RefImpl_FOUND)
 target_link_libraries(cvt2pcd pcl_e57)
+INSTALL(TARGETS pcl_e57  
+  ARCHIVE DESTINATION lib
+)
 endif()
 
 if (LIBLAS_FOUND)
 target_link_libraries(cvt2pcd pcl_las ${LIBLAS_LIBRARIES})
+INSTALL(TARGETS pcl_las  
+  LIBRARY DESTINATION lib
+    ARCHIVE DESTINATION lib
+)
 endif()
+
+
+
+INSTALL(TARGETS pcl_io_extra cvt2pcd
+  RUNTIME DESTINATION bin
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
+)
+
+INSTALL(DIRECTORY include/pcl  DESTINATION include)
