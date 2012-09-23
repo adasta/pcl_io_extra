@@ -3,7 +3,6 @@ project(pcl_io_extra)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_LIST_DIR}/cmake /usr/local/E57RefImpl)
 
-SET(CMAKE_BUILD_TYPE "DEBUG")
 
 #set the default path for built executables to the "bin" directory
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin)

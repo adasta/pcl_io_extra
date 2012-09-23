@@ -43,11 +43,15 @@ namespace pcl
 
     sensor_msgs::PointCloud2Ptr cloud;
     cloud.reset(new sensor_msgs::PointCloud2);
-    pcl::io::loadPCDFile (name, *cloud);
+    Eigen::Vector4f origin;
+    Eigen::Quaternionf rot;
+    pcl::io::loadPCDFile (name, *cloud, origin, rot);
 
     for (int i=0; i<cloud->fields.size(); i++ ){
           if ( strcmp(cloud->fields[i].name.c_str(), "x") ==0 ){
                pcl::PointCloud<pcl::PointXYZ>::Ptr xyz( new pcl::PointCloud<pcl::PointXYZ>);
+               xyz->sensor_origin_ = origin;
+			   xyz->sensor_orientation_ = rot;
                setCloud<pcl::PointXYZ>(xyz);
                pcl::fromROSMsg(*cloud, *xyz);
            }
@@ -95,6 +99,10 @@ namespace pcl
       pcl::PointCloud<pcl::Intensity>::Ptr ic = this->getCloud<pcl::Intensity>();
 
         if (xyz && n && r && l)  pcl::pointsToROSMsg( *xyz, *n, *r, *l, cloud_blob);
+		else if (xyz && n && ic && l)  pcl::pointsToROSMsg( *xyz, *n, *ic,*l,  cloud_blob);
+		else if (xyz && ic && l)  pcl::pointsToROSMsg( *xyz, *l, *ic, cloud_blob);
+		else if (xyz && n && ic)  pcl::pointsToROSMsg( *xyz, *n, *ic, cloud_blob);
+		else if (xyz &&  ic)  pcl::pointsToROSMsg( *xyz, *ic, cloud_blob);
         else if (xyz && n && r)  pcl::pointsToROSMsg( *xyz, *n, *r, cloud_blob);
         else if (xyz && l && n)  pcl::pointsToROSMsg( *xyz, *l, *n, cloud_blob);
         else if (xyz && n)  pcl::pointsToROSMsg( *xyz, *n, cloud_blob);
@@ -102,6 +110,8 @@ namespace pcl
         else if (xyz && l)  pcl::pointsToROSMsg( *xyz, *l, cloud_blob);
         else if (xyz && ic)  pcl::pointsToROSMsg( *xyz, *ic, cloud_blob);
         else if (xyz )  pcl::toROSMsg( *xyz, cloud_blob);
+        
+        
     }
 
   }
