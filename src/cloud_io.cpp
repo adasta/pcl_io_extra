@@ -12,6 +12,7 @@
 #include <pcl/io/pts_io.h>
 #include <pcl/io/xyz_io.h>
 #include <pcl/io/vtx_io.h>
+#include <pcl/io/ascii_io.h>
 
 #include <algorithm>
 
@@ -28,6 +29,7 @@ namespace pcl
       reader_map_["pts"] = new pcl::PTSReader;
       reader_map_["vtx"] = new pcl::VTXReader;
       reader_map_["xyz"] = new pcl::XYZAsciiReader;
+      reader_map_["txt"] = new pcl::ASCIIReader;
     }
 
     CloudReader::~CloudReader ()

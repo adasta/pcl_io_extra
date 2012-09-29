@@ -1,25 +1,60 @@
 /*
- * vtx_io.h
+ * Software License Agreement (BSD License)
  *
- *  Created on: Aug 5, 2012
- *      Author: Adam Stambler
+ *  Copyright (c) 2012, Adam Stambler, Carnegie Mellon University
+ *  All rights reserved.
+ *
+ *  Redistribution and use in source and binary forms, with or without
+ *  modification, are permitted provided that the following conditions
+ *  are met:
+ *
+ *   * Redistributions of source code must retain the above copyright
+ *     notice, this list of conditions and the following disclaimer.
+ *   * Redistributions in binary form must reproduce the above
+ *     copyright notice, this list of conditions and the following
+ *     disclaimer in the documentation and/or other materials provided
+ *     with the distribution.
+ *   * Neither the name of Willow Garage, Inc. nor the names of its
+ *     contributors may be used to endorse or promote products derived
+ *     from this software without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ *  "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ *  LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+ *  FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+ *  COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ *  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+ *  BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ *  LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ *  CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ *  LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ *
+ *
  */
 
 #ifndef ASCII_IO_H_
 #define ASCII_IO_H_
 
 #include <pcl/io/file_io.h>
+#include <sensor_msgs/PointField.h>
+#include <pcl/common/io.h>
+
 
 namespace pcl{
-/*
- * Geomagic xya format.  This reader only handles xya with xyz intensity
- * If you just have xyz data, use the xyzasciireader
- */
+/** \brief Ascii Point Cloud Reader.
+   * Read any ASCII file by setting the sepparating characters and input point fields.
+   * \author Adam Stambler
+   * \ingroup io
+   */
   class ASCIIReader : public FileReader {
 
   public:
     ASCIIReader();
     virtual ~ASCIIReader();
+    using   FileReader::read ;
+
     /* Load only the meta information (number of points, their types, etc),
             * and not the points themselves, from a given FILE file. Useful for fast
             * evaluation of the underlying data structure.
@@ -62,10 +97,58 @@ namespace pcl{
           read (const std::string &file_name, sensor_msgs::PointCloud2 &cloud,
                 Eigen::Vector4f &origin, Eigen::Quaternionf &orientation, int &file_version,
                 const int offset = 0);
+
+          /** \brief Set the ascii file point fields using a list of fields.
+		  * \param[in] fields  is a list of point fields, in order, in the input ascii file
+		  */
+          void setInputFields(const std::vector<sensor_msgs::PointField>& fields );
+
+
+          /** \brief Set the ascii file point fields using a point type.
+		  * \param[in] p  a point type
+		  */
+          template<typename PointT>
+          void setInputFields( const PointT p=PointT() );
+
+
+          /** \brief Set the Separting characters for the ascii point fields 2.
+			  * \param[in] chars string of separating characters
+			  *  Sets the separating characters for the point fields.  The
+			  *  default separating characters are " \n\t,"
+			  */
+          void setSepChars(std::string chars);
+
+          /** \brief Set the extension of the ascii point file type.
+			  * \param[in] ext   extension (example :  ".txt" or ".xyz" )
+			  */
+          void setExtension(std::string ext){extension_ = ext;}
   protected:
-     std::string sep_chars;
-     std::vector<sensor_msgs::>
+     std::string sep_chars_;
+     std::string extension_;
+     std::vector<sensor_msgs::PointField> fields_;
+     std::string name_;
+
+
+     /** \brief Parses token based on field type.
+		  * \param[in] token   string representation of point fields
+		  * \param[in] field   token point field type
+		  * \param[out] data_target  address that the point field data should be assigned to
+		  *  returns the size of the parsed point field in bytes
+		  */
+     int parse( const std::string& token, const sensor_msgs::PointField& field, uint8_t* data_target );
+
+     /** \brief Returns the size in bytes of a point field type.
+		  * \param[in] type   point field type
+		  *  returns the size of the type in bytes
+		  */
+     uint32_t typeSize( int type);
   };
 
 }
+
+template<typename PointT>
+inline void pcl::ASCIIReader::setInputFields(const PointT p) {
+	pcl::getFields<PointT>(fields_);
+}
+
 #endif /* PTS_IO_H_ */

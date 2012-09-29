@@ -3,6 +3,7 @@ project(pcl_io_extra)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_LIST_DIR}/cmake /usr/local/E57RefImpl)
 
+set(CMAKE_BUILD_TYPE "RELEASE")
 
 #set the default path for built executables to the "bin" directory
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin)
@@ -29,6 +30,7 @@ add_library(pcl_io_extra src/cloud_io.cpp
 						 src/xyz_io.cpp
 						 src/vtx_io.cpp
 						 src/xya_io.cpp
+						 src/ascii_io.cpp
 						 src/cloud_collection.cpp
 						 src/double_utils.cpp
 						 )
