@@ -2,7 +2,7 @@
  * Software License Agreement (BSD License)
  *
  *  Point Cloud Library (PCL) - www.pointclouds.org
- *  Copyright (c) 2012, Adam Stambler, Carnegie Mellon University.
+ *  Copyright (c) 2012-, Open Perception, Inc.
  *
  *  All rights reserved.
  *
@@ -16,7 +16,7 @@
  *     copyright notice, this list of conditions and the following
  *     disclaimer in the documentation and/or other materials provided
  *     with the distribution.
- *   * Neither the name of Willow Garage, Inc. nor the names of its
+ *   * Neither the name of the copyright holder(s) nor the names of its
  *     contributors may be used to endorse or promote products derived
  *     from this software without specific prior written permission.
  *
@@ -33,8 +33,6 @@
  *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: pcd_io.cpp 7229 2012-09-21 05:00:43Z rusu $
- *
  */
 
 #include <pcl/io/ascii_io.h>
@@ -44,33 +42,35 @@
 #include <boost/lexical_cast.hpp>
 
 pcl::ASCIIReader::ASCIIReader() {
-	{
-		extension_ = ".txt";
-		sep_chars_ = ", \n\r\t";
-		name_ = "AsciiReader";
 
-	  sensor_msgs::PointField f;
-	  f.datatype = sensor_msgs::PointField::FLOAT32;
-	  f.count= 1;
-	  f.name="x";
-	  fields_.push_back(f);
-	  }
+  extension_ = ".txt";
+  sep_chars_ = ", \n\r\t";
+  name_ = "AsciiReader";
 
-	  {
-	  sensor_msgs::PointField f;
-	  f.datatype = sensor_msgs::PointField::FLOAT32;
-	  f.count= 1;
-	  f.name="y";
-	  f.offset =4;
-	  fields_.push_back(f);
-	  }
-	  {
-	  sensor_msgs::PointField f;
-	  f.datatype = sensor_msgs::PointField::FLOAT32;
-	  f.count= 1;
-	  f.name="z";
-	  f.offset =8;
-	  fields_.push_back(f);
+  {
+  sensor_msgs::PointField f;
+  f.datatype = sensor_msgs::PointField::FLOAT32;
+  f.count= 1;
+  f.name="x";
+  fields_.push_back(f);
+  }
+
+  {
+  sensor_msgs::PointField f;
+  f.datatype = sensor_msgs::PointField::FLOAT32;
+  f.count= 1;
+  f.name="y";
+  f.offset =4;
+  fields_.push_back(f);
+  }
+
+  {
+  sensor_msgs::PointField f;
+  f.datatype = sensor_msgs::PointField::FLOAT32;
+  f.count= 1;
+  f.name="z";
+  f.offset =8;
+  fields_.push_back(f);
   }
 }
 
@@ -78,132 +78,142 @@ pcl::ASCIIReader::~ASCIIReader() {
 
 }
 
-int pcl::ASCIIReader::readHeader(const std::string& file_name,
-		sensor_msgs::PointCloud2& cloud, Eigen::Vector4f& origin,
-		Eigen::Quaternionf& orientation, int& file_version, int& data_type,
-		unsigned int& data_idx, const int offset) {
+int
+pcl::ASCIIReader::readHeader (const std::string& file_name,
+  sensor_msgs::PointCloud2& cloud, Eigen::Vector4f& origin,
+  Eigen::Quaternionf& orientation, int& file_version, int& data_type,
+  unsigned int& data_idx, const int offset)
+{
+  boost::filesystem::path fpath  = file_name;
 
+  if ( !boost::filesystem::exists(fpath) )
+  {
+    pcl::console::print_error("[%s] File %s does not exist.\n", name_.c_str(), file_name.c_str());
+    return -1;
+  }
+  if ( fpath.extension().string() != extension_)
+  {
+    pcl::console::print_error("[%s] File does not have %s extension. \n", name_.c_str(), extension_.c_str());
+    return -1;
+  }
 
-	  boost::filesystem::path fpath  = file_name;
+  cloud.fields = fields_;
+  cloud.point_step =0;
+  for(int i=0; i< fields_.size(); i++) cloud.point_step +=  typeSize(cloud.fields[i].datatype);
+  origin = Eigen::Vector4f::Zero();
+  orientation = Eigen::Quaternionf();
 
-	  if ( !boost::filesystem::exists(fpath) ){
-	    pcl::console::print_error("[%s] File %s does not exist.\n", name_.c_str(), file_name.c_str());
-	    return -1;
-	  }
-	  if ( fpath.extension().string() != extension_){
-	    pcl::console::print_error("[%s] File does not have %s extension. \n", name_.c_str(), extension_.c_str());
-	    return -1;
-	  }
+  std::fstream ifile(file_name.c_str(), std::fstream::in);
+  std::string line;
+  int total=0;
+  while(std::getline(ifile,line))  total++;
 
-	  cloud.fields = fields_;
-	  cloud.point_step =0;
-	  for(int i=0; i< fields_.size(); i++) cloud.point_step +=  typeSize(cloud.fields[i].datatype);
-	  origin = Eigen::Vector4f::Zero();
-	  orientation = Eigen::Quaternionf();
-
-	  std::fstream ifile(file_name.c_str(), std::fstream::in);
-	  std::string line;
-	  int total=0;
-	  while(std::getline(ifile,line)){
-	  total++;
-	  }
-	  cloud.width = total;
-	  cloud.height=1;
+  cloud.width = total;
+  cloud.height=1;
 }
 
-int pcl::ASCIIReader::read(const std::string& file_name,
-		sensor_msgs::PointCloud2& cloud, Eigen::Vector4f& origin,
-		Eigen::Quaternionf& orientation, int& file_version, const int offset) {
+int
+pcl::ASCIIReader::read(const std::string& file_name,
+  sensor_msgs::PointCloud2& cloud, Eigen::Vector4f& origin,
+  Eigen::Quaternionf& orientation, int& file_version, const int offset) {
 
-	  int  data_type;
-	  unsigned int data_idx;
-	  if ( this->readHeader(file_name,cloud,origin,orientation,file_version, data_type, data_idx, offset) <0 ) return -1;
-	  cloud.data.resize(cloud.height*cloud.width*cloud.point_step);
+  int  data_type;
+  unsigned int data_idx;
+  if ( this->readHeader(file_name,cloud,origin,orientation,file_version, data_type, data_idx, offset) <0 ) return -1;
+  cloud.data.resize(cloud.height*cloud.width*cloud.point_step);
 
-	  std::string line;
-	  std::fstream ifile(file_name.c_str(), std::fstream::in);
+  std::string line;
+  std::fstream ifile(file_name.c_str(), std::fstream::in);
 
-	    int total=0;
+    int total=0;
 
-	    uint8_t* data = cloud.data.data();
-	    while(std::getline(ifile,line)){
-	      boost::algorithm::trim(line);
-	      if (line.find_first_not_of("#") !=0 ) continue;
-	         std::vector<std::string> tokens;
-			 boost::algorithm::split(tokens, line,boost::algorithm::is_any_of(sep_chars_), boost::algorithm::token_compress_on);
-			 if (tokens.size()!= fields_.size()) continue;
-			 uint32_t offset =0;
-			 try{
-				 for(int i=0; i< fields_.size(); i++) offset +=  parse(tokens[i], fields_[i], data+offset);
-			 }
-			 catch (std::exception& e){
-				 continue;
-			 }
-			 data += offset;
-			 total++;
-	    }
-	    cloud.data.resize(total*cloud.point_step);
-	  return cloud.width*cloud.height;
+    uint8_t* data = cloud.data.data();
+    while(std::getline(ifile,line))
+    {
+      boost::algorithm::trim(line);
+      if (line.find_first_not_of("#") !=0 ) continue;   //skip comment lines
+
+     std::vector<std::string> tokens;
+     boost::algorithm::split(tokens, line,boost::algorithm::is_any_of(sep_chars_), boost::algorithm::token_compress_on);
+
+     if (tokens.size()!= fields_.size()) continue;
+
+     uint32_t offset =0;
+     try{
+       for(int i=0; i< fields_.size(); i++) offset +=  parse(tokens[i], fields_[i], data+offset);
+     }
+     catch (std::exception& e){
+       continue;
+     }
+     data += offset;
+     total++;
+    }
+  cloud.data.resize(total*cloud.point_step);
+  return (cloud.width*cloud.height);
 }
 
-void pcl::ASCIIReader::setInputFields(
+void
+pcl::ASCIIReader::setInputFields(
 		const std::vector<sensor_msgs::PointField>& fields) {
 	fields_ = fields;
 }
 
-void pcl::ASCIIReader::setSepChars(std::string chars) {
+void
+pcl::ASCIIReader::setSepChars(std::string chars) {
 	sep_chars_ =chars;
 }
 
-int pcl::ASCIIReader::parse(const std::string& token,
+int
+pcl::ASCIIReader::parse(const std::string& token,
 		const sensor_msgs::PointField& field, uint8_t* data_target) {
 
-	switch ( field.datatype){
-	case sensor_msgs::PointField::INT8:
-		*((int8_t*) data_target) = boost::lexical_cast<int8_t>(token);
-		return 1;
-	case sensor_msgs::PointField::UINT8:
-		*((uint8_t*) data_target) = boost::lexical_cast<uint8_t>(token);
-		return 1;
-	case sensor_msgs::PointField::INT16:
-		*((int16_t*) data_target) = boost::lexical_cast<int16_t>(token);
-		return 2;
-	case sensor_msgs::PointField::UINT16:
-		*((uint16_t*) data_target) = boost::lexical_cast<uint16_t>(token);
-		return 2;
-	case sensor_msgs::PointField::INT32:
-		*((int32_t*) data_target) = boost::lexical_cast<int32_t>(token);
-		return 4;
-	case sensor_msgs::PointField::UINT32:
-		*((uint32_t*) data_target) = boost::lexical_cast<uint32_t>(token);
-		return 4;
-	case sensor_msgs::PointField::FLOAT32:
-		*((float*) data_target) = boost::lexical_cast<float>(token);
-		return 4;
-	case sensor_msgs::PointField::FLOAT64:
-		*((double*) data_target) = boost::lexical_cast<double>(token);
-		return 8;
-	}
-	return 0;
+  switch ( field.datatype){
+    case sensor_msgs::PointField::INT8:
+      *((int8_t*) data_target) = boost::lexical_cast<int8_t>(token);
+      return 1;
+    case sensor_msgs::PointField::UINT8:
+      *((uint8_t*) data_target) = boost::lexical_cast<uint8_t>(token);
+      return 1;
+    case sensor_msgs::PointField::INT16:
+      *((int16_t*) data_target) = boost::lexical_cast<int16_t>(token);
+      return 2;
+    case sensor_msgs::PointField::UINT16:
+      *((uint16_t*) data_target) = boost::lexical_cast<uint16_t>(token);
+      return 2;
+    case sensor_msgs::PointField::INT32:
+      *((int32_t*) data_target) = boost::lexical_cast<int32_t>(token);
+      return 4;
+    case sensor_msgs::PointField::UINT32:
+      *((uint32_t*) data_target) = boost::lexical_cast<uint32_t>(token);
+      return 4;
+    case sensor_msgs::PointField::FLOAT32:
+      *((float*) data_target) = boost::lexical_cast<float>(token);
+      return 4;
+    case sensor_msgs::PointField::FLOAT64:
+      *((double*) data_target) = boost::lexical_cast<double>(token);
+      return 8;
+  }
+  return 0;
 }
 
-uint32_t pcl::ASCIIReader::typeSize(int type) {
+uint32_t
+pcl::ASCIIReader::typeSize(int type) {
 	switch ( type){
-	case sensor_msgs::PointField::INT8:
-		return 1;
-	case sensor_msgs::PointField::UINT8:
-		return 1;
-	case sensor_msgs::PointField::INT16:
-		return 2;
-	case sensor_msgs::PointField::UINT16:
-		return 2;
-	case sensor_msgs::PointField::INT32:
-		return 4;
-	case sensor_msgs::PointField::UINT32:
-		return 4;
-	case sensor_msgs::PointField::FLOAT32:
-		return 4;
-	case sensor_msgs::PointField::FLOAT64:
-		return 8;
+  case sensor_msgs::PointField::INT8:
+    return 1;
+  case sensor_msgs::PointField::UINT8:
+    return 1;
+  case sensor_msgs::PointField::INT16:
+    return 2;
+  case sensor_msgs::PointField::UINT16:
+    return 2;
+  case sensor_msgs::PointField::INT32:
+    return 4;
+  case sensor_msgs::PointField::UINT32:
+    return 4;
+  case sensor_msgs::PointField::FLOAT32:
+    return 4;
+  case sensor_msgs::PointField::FLOAT64:
+    return 8;
 	}
 }
