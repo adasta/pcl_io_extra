@@ -30,7 +30,6 @@ add_library(pcl_io_extra src/cloud_io.cpp
 						 src/xyz_io.cpp
 						 src/vtx_io.cpp
 						 src/xya_io.cpp
-						 src/ascii_io.cpp
 						 src/cloud_collection.cpp
 						 src/double_utils.cpp
 						 )
