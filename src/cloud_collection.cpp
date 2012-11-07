@@ -38,14 +38,14 @@ namespace pcl
     }
   }
 
-  void
+  bool
   CloudCollection::load(const std::string& name){
 
     sensor_msgs::PointCloud2Ptr cloud;
     cloud.reset(new sensor_msgs::PointCloud2);
     Eigen::Vector4f origin;
     Eigen::Quaternionf rot;
-    pcl::io::loadPCDFile (name, *cloud, origin, rot);
+    if ( pcl::io::loadPCDFile (name, *cloud, origin, rot) <0) return false;
 
     for (int i=0; i<cloud->fields.size(); i++ ){
           if ( strcmp(cloud->fields[i].name.c_str(), "x") ==0 ){

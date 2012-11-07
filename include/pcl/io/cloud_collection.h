@@ -44,7 +44,7 @@ namespace pcl
 
     void getCloudList(std::vector<std::string>& clouds);
 
-    void load(const std::string& name);
+    bool load(const std::string& name);
     void save(const std::string& name);
 
   protected:

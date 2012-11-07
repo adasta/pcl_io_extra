@@ -20,7 +20,7 @@ if(Xerces_FOUND)
 								${Xerces_LIBRARY_DIRS})
 	set(E57RefImpl_INCLUDE_DIRS "${E57RefImpl_ROOT}/include" 
 								${Xerces_INCLUDE_DIRS})
-	set(E57RefImpl_LIBRARIES E57RefImpl ${Xerces_LIBRARIES})
+	set(E57RefImpl_LIBRARIES E57RefImpl ${Xerces_LIBRARIES} ${Xerces_LIBRARY} )
 	endif()
 
 

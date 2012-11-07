@@ -30,6 +30,7 @@ add_library(pcl_io_extra src/cloud_io.cpp
 						 src/xyz_io.cpp
 						 src/vtx_io.cpp
 						 src/xya_io.cpp
+						 src/pcd2_io.cpp
 						 src/cloud_collection.cpp
 						 src/double_utils.cpp
 						 )
@@ -40,7 +41,7 @@ target_link_libraries(pcl_io_extra ${Boost_LIBRARIES}  ${PCL_LIBRARIES})
 
 #FIX E57Cmake !!!
 FIND_PACKAGE(E57RefImpl)
-
+set(E57RefImpl_FOUND 1)
 if (E57RefImpl_FOUND)
 	message(STATUS "Adding E57 Support")
 	include_directories(${E57RefImpl_INCLUDE_DIRS})

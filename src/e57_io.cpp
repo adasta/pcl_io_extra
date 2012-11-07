@@ -287,7 +287,7 @@ int pcl::E57Reader::read(const std::string & file_name, sensor_msgs::PointCloud2
          color_r = new  uint8_t[read_buffer_size_];
          color_g = new  uint8_t[read_buffer_size_];
          color_b = new  uint8_t[read_buffer_size_];
-         cloud.fields.push_back(newField("rgba",field_offset,sensor_msgs::PointField::FLOAT32,1));
+         cloud.fields.push_back(newField("rgb",field_offset,sensor_msgs::PointField::FLOAT32,1));
          field_offset+=4;
          destBuffers.push_back(SourceDestBuffer(imf, "colorGreen", color_g, read_buffer_size_, true) );
          destBuffers.push_back(SourceDestBuffer(imf, "colorRed", color_r, read_buffer_size_, true) );
