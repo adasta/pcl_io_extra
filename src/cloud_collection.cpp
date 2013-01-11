@@ -77,45 +77,56 @@ namespace pcl
             }
 
     }
+    return true;
   }
 
 
-    void CloudCollection::save(const std::string& name){
-    sensor_msgs::PointCloud2 cloud_blob;
-    getPointCloud2(cloud_blob);
-    if (cloud_blob.width) pcl::io::savePCDFile(name, cloud_blob,
-       this->getCloud<pcl::PointXYZ>()->sensor_origin_,
-       this->getCloud<pcl::PointXYZ>()->sensor_orientation_,
-       true);
+  void CloudCollection::save(const std::string& name){
+  sensor_msgs::PointCloud2 cloud_blob;
+  getPointCloud2(cloud_blob);
+  if (cloud_blob.width) pcl::io::savePCDFile(name, cloud_blob,
+     this->getCloud<pcl::PointXYZ>()->sensor_origin_,
+     this->getCloud<pcl::PointXYZ>()->sensor_orientation_,
+     true);
 
-  }
+}
 
-    void  CloudCollection::getPointCloud2(sensor_msgs::PointCloud2 & cloud_blob)
-    {
-      pcl::PointCloud<pcl::PointXYZ>::Ptr xyz = getCloud<pcl::PointXYZ>();
-      pcl::PointCloud<pcl::Normal>::Ptr n = this->getCloud<pcl::Normal>();
-      pcl::PointCloud<pcl::RGB>::Ptr r = this->getCloud<pcl::RGB>();
-      pcl::PointCloud<pcl::Label>::Ptr l = this->getCloud<pcl::Label>();
-      pcl::PointCloud<pcl::Intensity>::Ptr ic = this->getCloud<pcl::Intensity>();
+  void  CloudCollection::getPointCloud2(sensor_msgs::PointCloud2 & cloud_blob)
+  {
+    pcl::PointCloud<pcl::PointXYZ>::Ptr xyz = getCloud<pcl::PointXYZ>();
+    pcl::toROSMsg(*xyz, cloud_blob);
 
-        if (xyz && n && r && l)  pcl::pointsToROSMsg( *xyz, *n, *r, *l, cloud_blob);
-		else if (xyz && n && ic && l)  pcl::pointsToROSMsg( *xyz, *n, *ic,*l,  cloud_blob);
-		else if (xyz && ic && l)  pcl::pointsToROSMsg( *xyz, *l, *ic, cloud_blob);
-		else if (xyz && n && ic)  pcl::pointsToROSMsg( *xyz, *n, *ic, cloud_blob);
-		else if (xyz &&  ic)  pcl::pointsToROSMsg( *xyz, *ic, cloud_blob);
-        else if (xyz && n && r)  pcl::pointsToROSMsg( *xyz, *n, *r, cloud_blob);
-        else if (xyz && l && n)  pcl::pointsToROSMsg( *xyz, *l, *n, cloud_blob);
-        else if (xyz && n)  pcl::pointsToROSMsg( *xyz, *n, cloud_blob);
-        else if (xyz && r)  pcl::pointsToROSMsg( *xyz, *r, cloud_blob);
-        else if (xyz && l)  pcl::pointsToROSMsg( *xyz, *l, cloud_blob);
-        else if (xyz && ic)  pcl::pointsToROSMsg( *xyz, *ic, cloud_blob);
-        else if (xyz )  pcl::toROSMsg( *xyz, cloud_blob);
-        
-        
+    pcl::PointCloud<pcl::Normal>::Ptr n = this->getCloud<pcl::Normal>();
+    pcl::PointCloud<pcl::RGB>::Ptr r = this->getCloud<pcl::RGB>();
+    pcl::PointCloud<pcl::Label>::Ptr l = this->getCloud<pcl::Label>();
+    pcl::PointCloud<pcl::Intensity>::Ptr ic = this->getCloud<pcl::Intensity>();
+
+    if ( n != NULL){
+      sensor_msgs::PointCloud2 tmp, tmp2;
+      tmp2 = cloud_blob;
+      pcl::toROSMsg(*n, tmp);
+      pcl::concatenateFields(tmp, tmp2, cloud_blob);
     }
+    if ( r != NULL){
+        sensor_msgs::PointCloud2 tmp, tmp2;
+        tmp2 = cloud_blob;
+        pcl::toROSMsg(*r, tmp);
+        pcl::concatenateFields(tmp, tmp2, cloud_blob);
+      }
+    if ( ic != NULL){
+      sensor_msgs::PointCloud2 tmp, tmp2;
+      tmp2 = cloud_blob;
+      pcl::toROSMsg(*ic, tmp);
+      pcl::concatenateFields(tmp, tmp2, cloud_blob);
+    }
+    if ( l != NULL){
+      sensor_msgs::PointCloud2 tmp, tmp2;
+      tmp2 = cloud_blob;
+      pcl::toROSMsg(*l, tmp);
+      pcl::concatenateFields(tmp, tmp2, cloud_blob);
+    }
+  }
 
   }
 }
-
-
- /* namespace bim */
+ /* namespace pcl */
