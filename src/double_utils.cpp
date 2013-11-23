@@ -8,23 +8,23 @@
 
 #include <pcl/double_utils.h>
 
-bool pcl::hasDoublePointXYZ (const sensor_msgs::PointCloud2& cloud)
+bool pcl::hasDoublePointXYZ (const pcl::PCLPointCloud2& cloud)
 {
   for(int i=0; i<cloud.fields.size(); i++){
     bool is_coord=false;
-    if ((cloud.fields[i].name== "x") && (cloud.fields[i].datatype == sensor_msgs::PointField::FLOAT64) ){
+    if ((cloud.fields[i].name== "x") && (cloud.fields[i].datatype == pcl::PCLPointField::FLOAT64) ){
       return true;
     }
-    if ((cloud.fields[i].name== "y") && (cloud.fields[i].datatype == sensor_msgs::PointField::FLOAT64) ){
+    if ((cloud.fields[i].name== "y") && (cloud.fields[i].datatype == pcl::PCLPointField::FLOAT64) ){
       return true;
     }
-    if ((cloud.fields[i].name== "z") && (cloud.fields[i].datatype == sensor_msgs::PointField::FLOAT64) ){
+    if ((cloud.fields[i].name== "z") && (cloud.fields[i].datatype == pcl::PCLPointField::FLOAT64) ){
       return true;
     }
   }
 }
 
-bool pcl::cvtToDoubleAndOffset( const sensor_msgs::PointCloud2& cloudA, sensor_msgs::PointCloud2& cloudB, Eigen::Vector3d& offset){
+bool pcl::cvtToDoubleAndOffset( const pcl::PCLPointCloud2& cloudA, pcl::PCLPointCloud2& cloudB, Eigen::Vector3d& offset){
 
   cloudB.fields.clear();
 
@@ -49,7 +49,7 @@ bool pcl::cvtToDoubleAndOffset( const sensor_msgs::PointCloud2& cloudA, sensor_m
     }
     if(is_coord){
       cloudB.fields.push_back(cloudA.fields[i]);
-      cloudB.fields[i].datatype = sensor_msgs::PointField::FLOAT32;
+      cloudB.fields[i].datatype = pcl::PCLPointField::FLOAT32;
       cloudB.fields[i].count=1;
       cloudB.fields[i].offset = byte_offset;
       byte_offset+=4;
@@ -60,26 +60,26 @@ bool pcl::cvtToDoubleAndOffset( const sensor_msgs::PointCloud2& cloudA, sensor_m
       cloudB.fields[i].offset = byte_offset;
       copy_idx.push_back(i);
       switch (cloudB.fields.back().datatype){
-        case sensor_msgs::PointField::FLOAT64:
+        case pcl::PCLPointField::FLOAT64:
           byte_offset+=8;
           point_size+=8;
           length.push_back(8);
           break;
-        case sensor_msgs::PointField::FLOAT32:
-        case sensor_msgs::PointField::INT32:
-        case sensor_msgs::PointField::UINT32:
+        case pcl::PCLPointField::FLOAT32:
+        case pcl::PCLPointField::INT32:
+        case pcl::PCLPointField::UINT32:
           byte_offset+=4;
           point_size+= 4;
           length.push_back(4);
           break;
-        case sensor_msgs::PointField::UINT16:
-        case sensor_msgs::PointField::INT16:
+        case pcl::PCLPointField::UINT16:
+        case pcl::PCLPointField::INT16:
           byte_offset+=2;
           point_size+= 2;
           length.push_back(2);
           break;
-        case sensor_msgs::PointField::INT8:
-        case sensor_msgs::PointField::UINT8:
+        case pcl::PCLPointField::INT8:
+        case pcl::PCLPointField::UINT8:
           byte_offset+=1;
           byte_offset+=1;
           length.push_back(1);

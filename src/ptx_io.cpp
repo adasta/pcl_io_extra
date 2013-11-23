@@ -56,7 +56,7 @@ pcl::PTXReader::~PTXReader()
 
 
 
-int pcl::PTXReader::readHeader(const std::string & file_name, sensor_msgs::PointCloud2 & cloud,
+int pcl::PTXReader::readHeader(const std::string & file_name, pcl::PCLPointCloud2 & cloud,
                                Eigen::Vector4f & origin, Eigen::Quaternionf & orientation,
                                int & file_version, int & data_type, unsigned int & data_idx,
                                const int offset)
@@ -99,24 +99,24 @@ int pcl::PTXReader::readHeader(const std::string & file_name, sensor_msgs::Point
 
 
  {
-    sensor_msgs::PointField f;
-  f.datatype = sensor_msgs::PointField::FLOAT32;
+    pcl::PCLPointField f;
+  f.datatype = pcl::PCLPointField::FLOAT32;
   f.count= 1;
   f.name="x";
   cloud.fields.push_back(f);
   }
 
   {
-  sensor_msgs::PointField f;
-  f.datatype = sensor_msgs::PointField::FLOAT32;
+  pcl::PCLPointField f;
+  f.datatype = pcl::PCLPointField::FLOAT32;
   f.count= 1;
   f.name="y";
   f.offset =4;
   cloud.fields.push_back(f);
   }
   {
-  sensor_msgs::PointField f;
-  f.datatype = sensor_msgs::PointField::FLOAT32;
+  pcl::PCLPointField f;
+  f.datatype = pcl::PCLPointField::FLOAT32;
   f.count= 1;
   f.name="z";
   f.offset =8;
@@ -124,8 +124,8 @@ int pcl::PTXReader::readHeader(const std::string & file_name, sensor_msgs::Point
   }
 
   {
-  sensor_msgs::PointField f;
-  f.datatype = sensor_msgs::PointField::FLOAT32;
+  pcl::PCLPointField f;
+  f.datatype = pcl::PCLPointField::FLOAT32;
   f.count= 1;
   f.name="intensity";
   f.offset =12;
@@ -134,8 +134,8 @@ int pcl::PTXReader::readHeader(const std::string & file_name, sensor_msgs::Point
 
 
   {
-  sensor_msgs::PointField f;
-  f.datatype = sensor_msgs::PointField::FLOAT32;
+  pcl::PCLPointField f;
+  f.datatype = pcl::PCLPointField::FLOAT32;
   f.count= 1;
   f.name="rgb";
   f.offset =16;
@@ -146,7 +146,7 @@ int pcl::PTXReader::readHeader(const std::string & file_name, sensor_msgs::Point
 }
 
 
-int pcl::PTXReader::read(const std::string & file_name, sensor_msgs::PointCloud2 & cloud,
+int pcl::PTXReader::read(const std::string & file_name, pcl::PCLPointCloud2 & cloud,
                          Eigen::Vector4f & origin, Eigen::Quaternionf & orientation,
                          int & file_version, const int offset)
 {
@@ -198,3 +198,44 @@ pcl::PTXWriter::~PTXWriter()
 {
 }
 
+int pcl::PTXWriter::write(const std::string& file_name,
+		const pcl::PCLPointCloud2& cloud, const Eigen::Vector4f& origin,
+		const Eigen::Quaternionf& orientation, const bool binary) {
+
+std::ofstream ofile( file_name.c_str());
+ofile << cloud.width << "\n"<< cloud.height << "\n";
+
+Eigen::Matrix4f tf = Eigen::Matrix4f::Identity();
+tf.block<3,3>(0,0) = orientation.toRotationMatrix() ;
+tf.block<4,1>(0,3) = origin;
+
+for( int c=0 ; c<4; c++){
+	for(int r=0; r<2; r++){
+		ofile << tf(r,c) << " ";
+	}
+	ofile << tf(2,c) << "\n";
+}
+
+tf = Eigen::Matrix4f::Identity();
+ofile << tf << "\n";
+
+pcl::PointCloud<pcl::PointXYZI> tmp;
+pcl::fromPCLPointCloud2(cloud, tmp);
+for(int i=0; i< tmp.size(); i++){
+	ofile << tmp[i].x << " " << tmp[i].y << " " << tmp[i].z << " " << tmp[i].intensity << "\n";
+}
+/*
+if (pcl::getFieldIndex(cloud,"rgba")){
+	return -1;
+	assert(false && "not implemented");
+}
+else if( pcl::getFieldIndex(cloud,"intensity")>=0 ){
+}
+else{
+	assert(false && "not implemented");
+	return -1;
+}
+*/
+
+return cloud.width*cloud.height;
+}

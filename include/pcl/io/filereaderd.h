@@ -56,7 +56,7 @@ public:
 	        * to the next byte after the header (e.g., 513).
 	        */
 	      virtual int
-	      readHeader (const std::string &file_name, sensor_msgs::PointCloud2 &cloud,
+	      readHeader (const std::string &file_name, pcl::PCLPointCloud2 &cloud,
 	                  Eigen::Vector4d &origin, Eigen::Quaterniond &orientation,
 	                  int &file_version, int &data_type, unsigned int &data_idx, const int offset = 0) = 0;
 
@@ -84,7 +84,7 @@ public:
 	        * to the next byte after the header (e.g., 513).
 	        */
 	      virtual int
-	      readHeader (const std::string &file_name, sensor_msgs::PointCloud2 &cloud,
+	      readHeader (const std::string &file_name, pcl::PCLPointCloud2 &cloud,
 	                  Eigen::Vector4f &origin, Eigen::Quaternionf &orientation,
 	                  int &file_version, int &data_type, unsigned int &data_idx, const int offset = 0){
 	    	  Eigen::Vector4d orig;
@@ -108,7 +108,7 @@ public:
 	        * to the next byte after the header (e.g., 513).
 	        */
 	      virtual int
-	      read (const std::string &file_name, sensor_msgs::PointCloud2 &cloud,
+	      read (const std::string &file_name, pcl::PCLPointCloud2 &cloud,
 	            Eigen::Vector4f &origin, Eigen::Quaternionf &orientation, int &file_version,
 	            const int offset = 0) = 0;
 

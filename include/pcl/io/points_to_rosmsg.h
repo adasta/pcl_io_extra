@@ -11,20 +11,16 @@
 #include <Eigen/StdVector>
 #include <Eigen/Geometry>
 #include <cstddef>
-#include <std_msgs/Header.h>
+
 #include <pcl/pcl_macros.h>
 #include <pcl/exceptions.h>
-#include <pcl/cloud_properties.h>
-#include <pcl/channel_properties.h>
 #include <pcl/point_traits.h>
 #include <pcl/for_each_type.h>
 #include <boost/shared_ptr.hpp>
 #include <map>
 #include <boost/mpl/size.hpp>
 
-#include <sensor_msgs/PointField.h>
-#include <sensor_msgs/PointCloud2.h>
-#include <sensor_msgs/Image.h>
+#include <pcl/PCLPointCloud2.h>
 #include <pcl/point_cloud.h>
 #include <pcl/point_traits.h>
 #include <pcl/for_each_type.h>
@@ -44,7 +40,7 @@ namespace pcl {
 
   template<typename PointA, typename PointB> void
   pointsToROSMsg (const pcl::PointCloud<PointA>& cloudA, const pcl::PointCloud<PointB>& cloudB,
-                  sensor_msgs::PointCloud2& msg)
+                  pcl::PCLPointCloud2& msg)
   {
     assert(cloudA.points.size() == cloudB.points.size());
 
@@ -88,7 +84,7 @@ namespace pcl {
   template<typename PointA, typename PointB, typename PointC> void
   pointsToROSMsg (const pcl::PointCloud<PointA>& cloudA, const pcl::PointCloud<PointB>& cloudB,
                   const pcl::PointCloud<PointC>& cloudC,
-                  sensor_msgs::PointCloud2& msg)
+                  pcl::PCLPointCloud2& msg)
   {
     assert((cloudA.points.size() == cloudB.points.size())
            && (cloudA.points.size()== cloudC.points.size() ));
@@ -138,7 +134,7 @@ namespace pcl {
   template<typename PointA, typename PointB, typename PointC, typename PointD> void
   pointsToROSMsg (const pcl::PointCloud<PointA>& cloudA, const pcl::PointCloud<PointB>& cloudB,
                   const pcl::PointCloud<PointC>& cloudC, const pcl::PointCloud<PointD>& cloudD,
-                  sensor_msgs::PointCloud2& msg)
+                  pcl::PCLPointCloud2& msg)
   {
     assert( (cloudA.points.size() == cloudB.points.size()) &&
             (cloudC.points.size() == cloudD.points.size()) &&

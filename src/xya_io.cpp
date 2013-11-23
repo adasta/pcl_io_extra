@@ -23,7 +23,7 @@ pcl::XYAReader::~XYAReader()
 
 
 
-int pcl::XYAReader::readHeader(const std::string & file_name, sensor_msgs::PointCloud2 & cloud,
+int pcl::XYAReader::readHeader(const std::string & file_name, pcl::PCLPointCloud2 & cloud,
                                Eigen::Vector4f & origin, Eigen::Quaternionf & orientation,
                                int & file_version, int & data_type, unsigned int & data_idx,
                                const int offset)
@@ -44,24 +44,24 @@ int pcl::XYAReader::readHeader(const std::string & file_name, sensor_msgs::Point
   orientation = Eigen::Quaternionf();
 
  {
-  sensor_msgs::PointField f;
-  f.datatype = sensor_msgs::PointField::FLOAT32;
+  pcl::PCLPointField f;
+  f.datatype = pcl::PCLPointField::FLOAT32;
   f.count= 1;
   f.name="x";
   cloud.fields.push_back(f);
   }
 
   {
-  sensor_msgs::PointField f;
-  f.datatype = sensor_msgs::PointField::FLOAT32;
+  pcl::PCLPointField f;
+  f.datatype = pcl::PCLPointField::FLOAT32;
   f.count= 1;
   f.name="y";
   f.offset =4;
   cloud.fields.push_back(f);
   }
   {
-  sensor_msgs::PointField f;
-  f.datatype = sensor_msgs::PointField::FLOAT32;
+  pcl::PCLPointField f;
+  f.datatype = pcl::PCLPointField::FLOAT32;
   f.count= 1;
   f.name="z";
   f.offset =8;
@@ -69,8 +69,8 @@ int pcl::XYAReader::readHeader(const std::string & file_name, sensor_msgs::Point
   }
 
   {
-  sensor_msgs::PointField f;
-  f.datatype = sensor_msgs::PointField::FLOAT32;
+  pcl::PCLPointField f;
+  f.datatype = pcl::PCLPointField::FLOAT32;
   f.count= 1;
   f.name="rgb";
   f.offset =12;
@@ -96,7 +96,7 @@ int pcl::XYAReader::readHeader(const std::string & file_name, sensor_msgs::Point
 }
 
 
-int pcl::XYAReader::read(const std::string & file_name, sensor_msgs::PointCloud2 & cloud,
+int pcl::XYAReader::read(const std::string & file_name, pcl::PCLPointCloud2 & cloud,
                          Eigen::Vector4f & origin, Eigen::Quaternionf & orientation,
                          int & file_version, const int offset)
 {

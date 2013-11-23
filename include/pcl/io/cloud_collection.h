@@ -10,7 +10,7 @@
 
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
-#include <sensor_msgs/PointCloud2.h>
+#include <pcl/PCLPointCloud2.h>
 
 #include <boost/any.hpp>
 #include <map>
@@ -38,10 +38,14 @@ namespace pcl
     template<typename PointT> typename pcl::PointCloud<PointT>::Ptr
     getCloud();
 
+    template<typename PointT>
+    void getCloud(typename pcl::PointCloud<PointT>::Ptr& cloud);
+
+
     template<typename PointT> void
     setCloud(typename pcl::PointCloud<PointT>::Ptr);
 
-    void getPointCloud2(sensor_msgs::PointCloud2& cloud);
+    void getPointCloud2(pcl::PCLPointCloud2& cloud);
 
     void getCloudList(std::vector<std::string>& clouds);
 

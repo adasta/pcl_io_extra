@@ -20,7 +20,7 @@ namespace pcl{
 
     typename pcl::PointCloud<PointT>::Ptr cloud;
 
-    std::vector<sensor_msgs::PointField> fields;
+    std::vector<pcl::PCLPointField> fields;
     std::string key ="";
     pcl::getFields<PointT>(fields);
 
@@ -34,16 +34,37 @@ namespace pcl{
     {
       return boost::any_cast<typename pcl::PointCloud<PointT>::Ptr >(point_map_[key]);
     }
-    catch(boost::bad_any_cast & e)
+    catch(std::exception & e)
     {
      return cloud;
     }
 
   }
 
+  template<typename PointT>
+  void CloudCollection::getCloud(typename pcl::PointCloud<PointT>::Ptr& cloud){
+  	    std::vector<pcl::PCLPointField> fields;
+  	    std::string key ="";
+  	    pcl::getFields<PointT>(fields);
+  	    cloud.reset();
+  	    for(int i=0; i< fields.size(); i++){
+  	      char tmp[30];
+  	      sprintf(tmp, "%s-%d-%d_", fields[i].name.c_str(),fields[i].datatype, fields[i].count);
+  	      key = key+tmp;
+  	    }
+
+  	    try
+  	    {
+  	      cloud = boost::any_cast<typename pcl::PointCloud<PointT>::Ptr >(point_map_[key]);
+  	    }
+  	    catch(std::exception & e)
+  	    {
+  	    }
+  }
+
   template<typename PointT> void
   CloudCollection::setCloud(typename pcl::PointCloud<PointT>::Ptr cloud){
-        std::vector<sensor_msgs::PointField> fields;
+        std::vector<pcl::PCLPointField> fields;
         std::string key ="";
         pcl::getFields<PointT>(fields);
 

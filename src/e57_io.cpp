@@ -55,7 +55,7 @@ private:
 class FieldReaderColor : public FieldReaderBase{
 
 public:
-  FieldReaderColor(const sensor_msgs::PointField& field, uint8_t* r, uint8_t* g, uint8_t* b){
+  FieldReaderColor(const pcl::PCLPointField& field, uint8_t* r, uint8_t* g, uint8_t* b){
     r_=r;
     g_=g;
     b_=b;
@@ -78,7 +78,7 @@ protected:
 
 
 void readE57Header(StructureNode& scan,
-                sensor_msgs::PointCloud2& cloud,
+                pcl::toPCLPointCloud2& cloud,
                 Eigen::Vector4d& origin,
                 Eigen::Quaterniond& rot){
 
@@ -193,12 +193,9 @@ int pcl::E57Reader::readHeader(const std::string & file_name, sensor_msgs::Point
 
 
 
-pcl::E57Writer::E57Writer()
-{
-}
 
 sensor_msgs::PointField newField(std::string name, pcl::uint32_t offset, pcl::uint8_t datatype, pcl::uint32_t count){
-  sensor_msgs::PointField f;
+  pcl::PCLPointField f;
   f.name = name;
   f.offset = offset;
   f.datatype = datatype;
@@ -206,178 +203,11 @@ sensor_msgs::PointField newField(std::string name, pcl::uint32_t offset, pcl::ui
   return f;
 }
 
-int pcl::E57Reader::read(const std::string & file_name, sensor_msgs::PointCloud2 & cloud,
+int pcl::E57Reader::read(const std::string & file_name, pcl::toPCLPointCloud2 & cloud,
                          Eigen::Vector4f & origin, Eigen::Quaternionf & orientation, int & file_version,
                          const int offset)
 {
-
-  int total_points =0;
-
-  e57::uint8_t* color_r = NULL, *color_g = NULL, *color_b=NULL;
-  float* intensity = NULL;
-  std::vector<FieldReaderBase *> fieldreaders;
-  uint32_t indexRow[read_buffer_size_];
-  uint32_t indexColumn[read_buffer_size_];
-
-  try {
-     /// Read file from disk
-     ImageFile imf(file_name.c_str(), "r");
-     StructureNode root = imf.root();
-
-     /// Make sure vector of scans is defined and of expected type.
-     /// If "/data3D" wasn't defined, the call to root.get below would raise an exception.
-     if (!root.isDefined("/data3D")) {
-       pcl::console::print_error("[E57Reader] File doesn't contain 3D images\n");
-         return 0;
-     }
-     Node n = root.get("/data3D");
-     if (n.type() != E57_VECTOR) {
-       pcl::console::print_error("[E57Reader] bad file");
-         return 0;
-     }
-
-     /// The node is a vector so we can safely get a VectorNode handle to it.
-     /// If n was not a VectorNode, this would raise an exception.
-     VectorNode data3D(n);
-
-     /// Get the selected scan.
-     StructureNode scan(data3D.get(scan_number_));
-
-     /// Get "points" field in scan.  Should be a CompressedVectorNode.
-     CompressedVectorNode points(scan.get("points"));
-
-     Eigen::Vector4d origind;
-     Eigen::Quaterniond quatd;
-     readE57Header(scan,cloud,origind, quatd);
-     origind += -pt_offset_;
-     origin = origind.cast<float>();
-     orientation = quatd.cast<float>();
-
-     /// Need to figure out if has Cartesian or spherical coordinate system.
-     /// Interrogate the CompressedVector's prototype of its records.
-     StructureNode proto(points.prototype());
-
-
-     if ( !(proto.isDefined("cartesianX") &&
-         proto.isDefined("cartesianY") &&
-         proto.isDefined("cartesianZ") )) {
-       pcl::console::print_error("[E57Reader]  File has no XYZ data\n  The data may be in spherical coordiantes.\n");
-       return -1;  //there is no XYZ data
-     }
-
-       vector<SourceDestBuffer> destBuffers;
-
-       cloud.fields.push_back(newField("x",0,sensor_msgs::PointField::FLOAT32,1));
-       cloud.fields.push_back(newField("y",4,sensor_msgs::PointField::FLOAT32,1));
-       cloud.fields.push_back(newField("z",8,sensor_msgs::PointField::FLOAT32,1));
-
-
-       double x[read_buffer_size_];     destBuffers.push_back(SourceDestBuffer(imf, "cartesianX", x, read_buffer_size_, true, true));
-       double y[read_buffer_size_];     destBuffers.push_back(SourceDestBuffer(imf, "cartesianY", y, read_buffer_size_, true, true));
-       double z[read_buffer_size_];     destBuffers.push_back(SourceDestBuffer(imf, "cartesianZ", z, read_buffer_size_, true, true));
-
-       fieldreaders.push_back( new FieldReader<float, double>(cloud.fields[0], x));
-       fieldreaders.push_back( new FieldReader<float, double>(cloud.fields[1], y));
-       fieldreaders.push_back( new FieldReader<float, double>(cloud.fields[2], z));
-
-       int field_offset = 12;
-       if ( proto.isDefined("colorGreen") &&
-           proto.isDefined("colorRed") &&
-           proto.isDefined("colorBlue") ){
-         color_r = new  uint8_t[read_buffer_size_];
-         color_g = new  uint8_t[read_buffer_size_];
-         color_b = new  uint8_t[read_buffer_size_];
-         cloud.fields.push_back(newField("rgb",field_offset,sensor_msgs::PointField::FLOAT32,1));
-         field_offset+=4;
-         destBuffers.push_back(SourceDestBuffer(imf, "colorGreen", color_g, read_buffer_size_, true) );
-         destBuffers.push_back(SourceDestBuffer(imf, "colorRed", color_r, read_buffer_size_, true) );
-         destBuffers.push_back(SourceDestBuffer(imf, "colorBlue", color_b, read_buffer_size_, true) );
-
-         fieldreaders.push_back( new FieldReaderColor(cloud.fields.back(), color_r, color_g, color_b));
-       }
-
-       if (proto.isDefined("intensity") ){
-         intensity = new float[read_buffer_size_];
-         destBuffers.push_back(SourceDestBuffer(imf, "intensity", intensity, read_buffer_size_, true, true) );
-         cloud.fields.push_back(newField("intensity",field_offset,sensor_msgs::PointField::FLOAT32,1));
-         field_offset+= 4;
-         fieldreaders.push_back( new FieldReader<float, float>(cloud.fields.back(), intensity));
-       }
-
-       int point_size =0;
-       int field_size[] = {1,1,2,2,4,4,4,8};
-       for(int i=0; i< cloud.fields.size(); i++) point_size += cloud.fields[i].count* field_size[cloud.fields[i].datatype-1];
-
-       total_points = cloud.width*cloud.height;
-       cloud.data.resize( total_points*point_size );
-       cloud.point_step = point_size;
-
-       for(int i=0; i<fieldreaders.size(); i++) fieldreaders[i]->setup(cloud.data.data(), point_size);
-
-       if (cloud.height > 1){
-         destBuffers.push_back(SourceDestBuffer(imf, "rowIndex", indexRow, read_buffer_size_, true,true));
-         destBuffers.push_back(SourceDestBuffer(imf, "columnIndex", indexColumn, read_buffer_size_, true,true));
-       }
-
-        /// Create a reader of the points CompressedVector, try to read first block of N points
-        /// Each call to reader.read() will fill the xyz buffers until the points are exhausted.
-        CompressedVectorReader reader = points.reader(destBuffers);
-        int read_count =-1;
-        read_count = reader.read();
-        int cloud_index=0;
-        while ( read_count > 0 ){
-          for(int j=0; j<read_count; j++){
-            if (cloud.height>1) cloud_index = (cloud.height-indexRow[j]-1) * cloud.width + indexColumn[j];
-            else cloud_index ++;
-            for(int i=0; i<fieldreaders.size(); i++){
-              fieldreaders[i]->copy(j, cloud_index);
-            }
-          }
-          read_count = reader.read();
-        }
-        imf.close();
-
-     } catch(E57Exception& ex) {
-       //clean up allocated memory
-       if (color_b!= NULL){ delete color_b; delete color_g; delete color_r;}
-       if (intensity != NULL ) delete intensity;
-       for(int i=0; i< fieldreaders.size(); i++) delete fieldreaders[i];
-
-
-       ex.report(__FILE__, __LINE__, __FUNCTION__);
-       return -1;
-     } catch (std::exception& ex) {
-         cerr << "Got an std::exception, what=" << ex.what() << endl;
-
-         //clean up allocated memory
-         if (color_b!= NULL){ delete color_b; delete color_g; delete color_r;}
-         if (intensity != NULL ) delete intensity;
-         for(int i=0; i< fieldreaders.size(); i++) delete fieldreaders[i];
-
-         return -1;
-     } catch (...) {
-         cerr << "Got an unknown exception" << endl;
-
-         //clean up allocated memory
-         if (color_b!= NULL){ delete color_b; delete color_g; delete color_r;}
-         if (intensity != NULL ) delete intensity;
-         for(int i=0; i< fieldreaders.size(); i++) delete fieldreaders[i];
-         return -1;
-     }
-
-     if (color_b!= NULL){ delete color_b; delete color_g; delete color_r;}
-     if (intensity != NULL ) delete intensity;
-     for(int i=0; i< fieldreaders.size(); i++) delete fieldreaders[i];
-
- return total_points;
+  assert(false && "unimplemented");
+  return -1;
 }
-
-
-
-pcl::E57Writer::~E57Writer()
-{
-}
-
-
-
 

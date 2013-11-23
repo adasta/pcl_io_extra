@@ -1,8 +1,8 @@
 
 
 #include <pcl/io/las_io.h>
-#include <liblas/reader.hpp>
-#include <liblas/writer.hpp>
+#include <liblas/lasreader.hpp>
+#include <liblas/laswriter.hpp>
 
 #include <fstream>  // std::ifstream
 #include <iostream> // std::cout
@@ -16,16 +16,16 @@ pcl::LASReader::~LASReader()
 {
 }
 
-int pcl::LASReader::readHeader(const std::string & file_name, sensor_msgs::PointCloud2 & cloud,
+int pcl::LASReader::readHeader(const std::string & file_name, pcl::toPCLPointCloud2 & cloud,
                                Eigen::Vector4f & origin, Eigen::Quaternionf & orientation,
                                int & file_version, int & data_type, unsigned int & data_idx, const int offset)
 {
   std::ifstream ifs;
   ifs.open(file_name.c_str(), std::ios::in | std::ios::binary);
 
-  liblas::Reader reader(ifs);
+  liblas::LASReader reader(ifs);
 
-  liblas::Header const& header = reader.GetHeader();
+  liblas::LASHeader const& header = reader.GetHeader();
 
   //todo
 }
@@ -51,7 +51,7 @@ For PCL, I am just going to use x,y,z, itensity and colro
  */
 
 int pcl::LASReader::read(const std::string & file_name,
-                         sensor_msgs::PointCloud2 & cloud,
+                         pcl::toPCLPointCloud2 & cloud,
                          Eigen::Vector4f & origin,
                          Eigen::Quaternionf & orientation,
                          int & file_version, const int offset)
@@ -59,7 +59,7 @@ int pcl::LASReader::read(const std::string & file_name,
   std::ifstream ifs;
   ifs.open(file_name.c_str(), std::ios::in | std::ios::binary);
 
-  liblas::Reader reader(ifs);
+  liblas::LASReader reader(ifs);
 
 
   unsigned int idx = 0;
@@ -111,7 +111,7 @@ int pcl::LASReader::read(const std::string & file_name,
 
   for(uint64_t i=0; reader.ReadNextPoint(); i++)
   {
-      liblas::Point const& p = reader.GetPoint();
+      liblas::LASPoint const& p = reader.GetPoint();
        *( (double *) ( cloud.data.data() +point_size*i     ) )=  p.GetX();
        *( (double *) ( cloud.data.data() + point_size*i +8 ) )=  p.GetY();
        *( (double *) ( cloud.data.data() + point_size*i +16 ) )=  p.GetZ();
@@ -130,7 +130,7 @@ pcl::LASWriter::~LASWriter()
 }
 
 
-int pcl::LASWriter::write(const std::string & file_name, const sensor_msgs::PointCloud2 & cloud, const Eigen::Vector4f & origin, const Eigen::Quaternionf & orientation, const bool binary)
+int pcl::LASWriter::write(const std::string & file_name, const pcl::toPCLPointCloud2 & cloud, const Eigen::Vector4f & origin, const Eigen::Quaternionf & orientation, const bool binary)
 {
 }
 

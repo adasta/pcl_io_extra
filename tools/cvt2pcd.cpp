@@ -77,12 +77,13 @@ int main(int argc, char** argv){
   }
 
 #ifdef E57
+  std::cout << "Adding E57 Support : \n";
   reader.registerExtension("e57", new pcl::E57Reader( ));
 #endif
 #ifdef LAS
   reader.registerExtension("las", new pcl::LASReader );
 #endif
-  sensor_msgs::PointCloud2::Ptr cloud(new sensor_msgs::PointCloud2);
+  pcl::PCLPointCloud2::Ptr cloud(new pcl::PCLPointCloud2);
 
   Eigen::Vector4f origin;
   Eigen::Quaternionf rot;
@@ -98,7 +99,7 @@ int main(int argc, char** argv){
 
       if ( 3 == sscanf(vm["view_offset"].as<std::string>().c_str(), "%lf,%lf,%lf", &voff[0], &voff[1], &voff[2]) ){
         std::cout << "Translating by " << voff.transpose() << " \n";
-        sensor_msgs::PointCloud2::Ptr cloud2(new sensor_msgs::PointCloud2);
+        pcl::PCLPointCloud2::Ptr cloud2(new pcl::PCLPointCloud2);
         pcl::cvtToDoubleAndOffset(*cloud,*cloud2,voff);
         cloud = cloud2;
       }

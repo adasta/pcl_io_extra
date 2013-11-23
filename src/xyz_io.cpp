@@ -23,7 +23,7 @@ pcl::XYZAsciiReader::~XYZAsciiReader()
 
 
 
-int pcl::XYZAsciiReader::readHeader(const std::string & file_name, sensor_msgs::PointCloud2 & cloud,
+int pcl::XYZAsciiReader::readHeader(const std::string & file_name, pcl::PCLPointCloud2 & cloud,
                                Eigen::Vector4f & origin, Eigen::Quaternionf & orientation,
                                int & file_version, int & data_type, unsigned int & data_idx,
                                const int offset)
@@ -44,24 +44,24 @@ int pcl::XYZAsciiReader::readHeader(const std::string & file_name, sensor_msgs::
   orientation = Eigen::Quaternionf();
 
  {
-  sensor_msgs::PointField f;
-  f.datatype = sensor_msgs::PointField::FLOAT32;
+  pcl::PCLPointField f;
+  f.datatype = pcl::PCLPointField::FLOAT32;
   f.count= 1;
   f.name="x";
   cloud.fields.push_back(f);
   }
 
   {
-  sensor_msgs::PointField f;
-  f.datatype = sensor_msgs::PointField::FLOAT32;
+  pcl::PCLPointField f;
+  f.datatype = pcl::PCLPointField::FLOAT32;
   f.count= 1;
   f.name="y";
   f.offset =4;
   cloud.fields.push_back(f);
   }
   {
-  sensor_msgs::PointField f;
-  f.datatype = sensor_msgs::PointField::FLOAT32;
+  pcl::PCLPointField f;
+  f.datatype = pcl::PCLPointField::FLOAT32;
   f.count= 1;
   f.name="z";
   f.offset =8;
@@ -88,7 +88,7 @@ int pcl::XYZAsciiReader::readHeader(const std::string & file_name, sensor_msgs::
 }
 
 
-int pcl::XYZAsciiReader::read(const std::string & file_name, sensor_msgs::PointCloud2 & cloud,
+int pcl::XYZAsciiReader::read(const std::string & file_name, pcl::PCLPointCloud2 & cloud,
                          Eigen::Vector4f & origin, Eigen::Quaternionf & orientation,
                          int & file_version, const int offset)
 {

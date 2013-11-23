@@ -9,7 +9,7 @@
 #define DOUBLE_UTILS_H_
 
 #include <Eigen/Core>
-#include <sensor_msgs/PointCloud2.h>
+#include <pcl/PCLPointCloud2.h>
 
 #include <pcl/point_types.h>
 #include <pcl/point_cloud.h>
@@ -17,7 +17,7 @@
 namespace pcl{
 
 
-bool hasDoublePointXYZ(const sensor_msgs::PointCloud2& cloud);
+bool hasDoublePointXYZ(const pcl::PCLPointCloud2& cloud);
 
 
 template<typename PointTA, typename PointTB>
@@ -36,7 +36,7 @@ void cvtAndOffset( const pcl::PointCloud<PointTA>& cloudA, const pcl::PointCloud
   }
 
 
-bool cvtToDoubleAndOffset( const sensor_msgs::PointCloud2& cloudA, sensor_msgs::PointCloud2& cloudB,
+bool cvtToDoubleAndOffset( const pcl::PCLPointCloud2& cloudA, pcl::PCLPointCloud2& cloudB,
     Eigen::Vector3d& offset);
 
 }

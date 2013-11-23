@@ -57,14 +57,14 @@ namespace pcl
         }
       }
 
-      int CloudReader::readHeader(const std::string & file_name, sensor_msgs::PointCloud2 & cloud, Eigen::Vector4f & origin, Eigen::Quaternionf & orientation, int & file_version, int & data_type, unsigned int & data_idx, const int offset)
+      int CloudReader::readHeader(const std::string & file_name, pcl::PCLPointCloud2 & cloud, Eigen::Vector4f & origin, Eigen::Quaternionf & orientation, int & file_version, int & data_type, unsigned int & data_idx, const int offset)
       {
         FileReader* reader = chooseReader(file_name);
         if (reader == NULL) return -1;
         return reader->readHeader(file_name, cloud,origin,orientation,file_version, data_type, data_idx, offset);
       }
 
-      int CloudReader::read(const std::string & file_name, sensor_msgs::PointCloud2 & cloud, Eigen::Vector4f & origin, Eigen::Quaternionf & orientation, int & file_version, const int offset)
+      int CloudReader::read(const std::string & file_name, pcl::PCLPointCloud2 & cloud, Eigen::Vector4f & origin, Eigen::Quaternionf & orientation, int & file_version, const int offset)
       {
         FileReader* reader = chooseReader(file_name);
         if (reader == NULL) return -1;
