@@ -39,7 +39,7 @@ target_link_libraries(pcl_io_extra ${Boost_LIBRARIES}  ${PCL_LIBRARIES})
 
 
 #FIX E57Cmake !!!
-FIND_PACKAGE(E57RefImpl)
+#FIND_PACKAGE(E57RefImpl)
 if (E57REFIMPL_FOUND)
 	message(STATUS "Adding E57 Support")
 	include_directories(${E57RefImpl_INCLUDE_DIRS})
@@ -58,14 +58,14 @@ if (LIBLAS_FOUND)
 	add_definitions(-DLAS)
 endif()
 
-add_executable(cvt2pcd tools/cvt2pcd.cpp)
-target_link_libraries(cvt2pcd pcl_io_extra ${Boost_LIBRARIES}  ${PCL_LIBRARIES})
+ add_executable(cvt2pcd tools/cvt2pcd.cpp)
+ target_link_libraries(cvt2pcd pcl_io_extra ${Boost_LIBRARIES}  ${PCL_LIBRARIES})
 
-add_executable(cvt2ptx tools/cvt2ptx.cpp)
-target_link_libraries(cvt2ptx pcl_io_extra ${Boost_LIBRARIES}  ${PCL_LIBRARIES})
+#add_executable(cvt2ptx tools/cvt2ptx.cpp)
+#target_link_libraries(cvt2ptx pcl_io_extra ${Boost_LIBRARIES}  ${PCL_LIBRARIES})
 
-add_executable(cvt2xyz tools/cvt2xyz.cpp)
-target_link_libraries(cvt2xyz pcl_io_extra ${Boost_LIBRARIES}  ${PCL_LIBRARIES})
+#add_executable(cvt2xyz tools/cvt2xyz.cpp)
+#target_link_libraries(cvt2xyz pcl_io_extra ${Boost_LIBRARIES}  ${PCL_LIBRARIES})
 
 
 if (E57REFIMPL_FOUND)

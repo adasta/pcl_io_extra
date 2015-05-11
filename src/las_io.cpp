@@ -1,8 +1,10 @@
 
 
 #include <pcl/io/las_io.h>
-#include <liblas/lasreader.hpp>
-#include <liblas/laswriter.hpp>
+#include <liblas/reader.hpp>
+#include <liblas/writer.hpp>
+
+#include <pcl/PCLPointCloud2.h>
 
 #include <fstream>  // std::ifstream
 #include <iostream> // std::cout
@@ -16,16 +18,16 @@ pcl::LASReader::~LASReader()
 {
 }
 
-int pcl::LASReader::readHeader(const std::string & file_name, pcl::toPCLPointCloud2 & cloud,
+int pcl::LASReader::readHeader(const std::string & file_name, pcl::PCLPointCloud2 & cloud,
                                Eigen::Vector4f & origin, Eigen::Quaternionf & orientation,
                                int & file_version, int & data_type, unsigned int & data_idx, const int offset)
 {
   std::ifstream ifs;
   ifs.open(file_name.c_str(), std::ios::in | std::ios::binary);
 
-  liblas::LASReader reader(ifs);
+  liblas::Reader reader(ifs);
 
-  liblas::LASHeader const& header = reader.GetHeader();
+  liblas::Header const& header = reader.GetHeader();
 
   //todo
 }
@@ -51,7 +53,7 @@ For PCL, I am just going to use x,y,z, itensity and colro
  */
 
 int pcl::LASReader::read(const std::string & file_name,
-                         pcl::toPCLPointCloud2 & cloud,
+                         pcl::PCLPointCloud2 & cloud,
                          Eigen::Vector4f & origin,
                          Eigen::Quaternionf & orientation,
                          int & file_version, const int offset)
@@ -59,7 +61,7 @@ int pcl::LASReader::read(const std::string & file_name,
   std::ifstream ifs;
   ifs.open(file_name.c_str(), std::ios::in | std::ios::binary);
 
-  liblas::LASReader reader(ifs);
+  liblas::Reader reader(ifs);
 
 
   unsigned int idx = 0;
@@ -70,24 +72,24 @@ int pcl::LASReader::read(const std::string & file_name,
   cloud.is_dense = true;
 
   {
-    sensor_msgs::PointField f;
-  f.datatype = sensor_msgs::PointField::FLOAT64;
+    pcl::PCLPointField f;
+  f.datatype = pcl::PCLPointField::FLOAT64;
   f.count= 1;
   f.name="x";
   cloud.fields.push_back(f);
   }
 
   {
-  sensor_msgs::PointField f;
-  f.datatype = sensor_msgs::PointField::FLOAT64;
+  pcl::PCLPointField f;
+  f.datatype = pcl::PCLPointField::FLOAT64;
   f.count= 1;
   f.name="y";
   f.offset =8;
   cloud.fields.push_back(f);
   }
   {
-  sensor_msgs::PointField f;
-  f.datatype = sensor_msgs::PointField::FLOAT64;
+  pcl::PCLPointField f;
+  f.datatype = pcl::PCLPointField::FLOAT64;
   f.count= 1;
   f.name="z";
   f.offset =16;
@@ -95,8 +97,8 @@ int pcl::LASReader::read(const std::string & file_name,
   }
 
   {
-  sensor_msgs::PointField f;
-  f.datatype = sensor_msgs::PointField::FLOAT32;
+  pcl::PCLPointField f;
+  f.datatype = pcl::PCLPointField::FLOAT32;
   f.count= 1;
   f.name="intensity";
   f.offset =24;
@@ -111,7 +113,7 @@ int pcl::LASReader::read(const std::string & file_name,
 
   for(uint64_t i=0; reader.ReadNextPoint(); i++)
   {
-      liblas::LASPoint const& p = reader.GetPoint();
+      liblas::Point const& p = reader.GetPoint();
        *( (double *) ( cloud.data.data() +point_size*i     ) )=  p.GetX();
        *( (double *) ( cloud.data.data() + point_size*i +8 ) )=  p.GetY();
        *( (double *) ( cloud.data.data() + point_size*i +16 ) )=  p.GetZ();
@@ -130,7 +132,7 @@ pcl::LASWriter::~LASWriter()
 }
 
 
-int pcl::LASWriter::write(const std::string & file_name, const pcl::toPCLPointCloud2 & cloud, const Eigen::Vector4f & origin, const Eigen::Quaternionf & orientation, const bool binary)
+int pcl::LASWriter::write(const std::string & file_name, const pcl::PCLPointCloud2 & cloud, const Eigen::Vector4f & origin, const Eigen::Quaternionf & orientation, const bool binary)
 {
 }
 
